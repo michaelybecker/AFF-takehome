@@ -1,0 +1,223 @@
+{
+  "version": "0.2.0",
+  "clips": [
+    {
+      "id": "Hero0",
+      "title": "Hero0",
+      "duration": 6.206,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Hero0.mp4",
+      "poster": "/media/posters/Hero0.jpg"
+    },
+    {
+      "id": "Hero1",
+      "title": "Hero1",
+      "duration": 5.271933,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Hero1.mp4",
+      "poster": "/media/posters/Hero1.jpg"
+    },
+    {
+      "id": "Hero2",
+      "title": "Hero2",
+      "duration": 3.837,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Hero2.mp4",
+      "poster": "/media/posters/Hero2.jpg"
+    },
+    {
+      "id": "Hero3",
+      "title": "Hero3",
+      "duration": 6.172833,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Hero3.mp4",
+      "poster": "/media/posters/Hero3.jpg"
+    },
+    {
+      "id": "Hero4",
+      "title": "Hero4",
+      "duration": 2.3023,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Hero4.mp4",
+      "poster": "/media/posters/Hero4.jpg"
+    },
+    {
+      "id": "Mask_Assembly",
+      "title": "Mask Assembly",
+      "duration": 6.881875,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Mask_Assembly.mp4",
+      "poster": "/media/posters/Mask_Assembly.jpg"
+    },
+    {
+      "id": "Nano_Suitup",
+      "title": "Nano Suitup",
+      "duration": 9.009,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Nano_Suitup.mp4",
+      "poster": "/media/posters/Nano_Suitup.jpg"
+    },
+    {
+      "id": "Nighttime_Lunge",
+      "title": "Nighttime Lunge",
+      "duration": 1.918583,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Nighttime_Lunge.mp4",
+      "poster": "/media/posters/Nighttime_Lunge.jpg"
+    },
+    {
+      "id": "Nighttime_Soar",
+      "title": "Nighttime Soar",
+      "duration": 1.793458,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Nighttime_Soar.mp4",
+      "poster": "/media/posters/Nighttime_Soar.jpg"
+    },
+    {
+      "id": "Off_Plane",
+      "title": "Off Plane",
+      "duration": 2.794458,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Off_Plane.mp4",
+      "poster": "/media/posters/Off_Plane.jpg"
+    },
+    {
+      "id": "Party_Landing",
+      "title": "Party Landing",
+      "duration": 3.461792,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Party_Landing.mp4",
+      "poster": "/media/posters/Party_Landing.jpg"
+    },
+    {
+      "id": "Reaction_Shot",
+      "title": "Reaction Shot",
+      "duration": 2.711042,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Reaction_Shot.mp4",
+      "poster": "/media/posters/Reaction_Shot.jpg"
+    },
+    {
+      "id": "Softland_And_Soar",
+      "title": "Softland And Soar",
+      "duration": 3.420083,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Softland_And_Soar.mp4",
+      "poster": "/media/posters/Softland_And_Soar.jpg"
+    },
+    {
+      "id": "Suit_Up",
+      "title": "Suit Up",
+      "duration": 5.880875,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Suit_Up.mp4",
+      "poster": "/media/posters/Suit_Up.jpg"
+    },
+    {
+      "id": "V1-0003_true00002899",
+      "title": "V1-0003 true00002899",
+      "duration": 2.585917,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/V1-0003_true00002899.mp4",
+      "poster": "/media/posters/V1-0003_true00002899.jpg"
+    },
+    {
+      "id": "Walking",
+      "title": "Walking",
+      "duration": 6.089417,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Walking.mp4",
+      "poster": "/media/posters/Walking.jpg"
+    },
+    {
+      "id": "Walking_With_Explosion_Behind",
+      "title": "Walking With Explosion Behind",
+      "duration": 2.544208,
+      "width": 1920,
+      "height": 1080,
+      "src": "/media/video/Walking_With_Explosion_Behind.mp4",
+      "poster": "/media/posters/Walking_With_Explosion_Behind.jpg"
+    }
+  ],
+  "canon": [
+    {
+      "id": "ironman_ca_post1--1-",
+      "src": "/media/canon/ironman_ca_post1--1-.webp",
+      "title": "Armor design study",
+      "variant": "Design reference",
+      "original": "ironman_ca_post1 (1).webp"
+    },
+    {
+      "id": "ironman_ca_post10",
+      "src": "/media/canon/ironman_ca_post10.webp",
+      "title": "Armor design study",
+      "variant": "Design reference",
+      "original": "ironman_ca_post10.webp"
+    },
+    {
+      "id": "ironman_ca_post11",
+      "src": "/media/canon/ironman_ca_post11.webp",
+      "title": "Armor design study",
+      "variant": "Design reference",
+      "original": "ironman_ca_post11.webp"
+    },
+    {
+      "id": "ironman_ca_post7",
+      "src": "/media/canon/ironman_ca_post7.webp",
+      "title": "Armor design study",
+      "variant": "Design reference",
+      "original": "ironman_ca_post7.webp"
+    },
+    {
+      "id": "ironman_ca_post8",
+      "src": "/media/canon/ironman_ca_post8.webp",
+      "title": "Armor design study",
+      "variant": "Design reference",
+      "original": "ironman_ca_post8.webp"
+    },
+    {
+      "id": "phil-saunders-immk42-phil-ryan-web",
+      "src": "/media/canon/phil-saunders-immk42-phil-ryan-web.webp",
+      "title": "Mark XLII design reference",
+      "variant": "Alternate armor",
+      "original": "phil-saunders-immk42-phil-ryan-web.jpg"
+    },
+    {
+      "id": "phil-saunders-immk42-web",
+      "src": "/media/canon/phil-saunders-immk42-web.webp",
+      "title": "Mark XLII design reference",
+      "variant": "Alternate armor",
+      "original": "phil-saunders-immk42-web.jpg"
+    },
+    {
+      "id": "phil-saunders-mk42-elevations-web",
+      "src": "/media/canon/phil-saunders-mk42-elevations-web.webp",
+      "title": "Mark XLII design reference",
+      "variant": "Alternate armor",
+      "original": "phil-saunders-mk42-elevations-web.jpg"
+    }
+  ],
+  "passes": [
+    "beauty",
+    "matte",
+    "depth",
+    "normals"
+  ],
+  "frames": 48
+}

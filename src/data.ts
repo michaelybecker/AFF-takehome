@@ -1,0 +1,10 @@
+export type Clip = { id: string; title: string; src: string; poster: string; duration: number; width: number; height: number };
+export type Canon = { id: string; title: string; src: string; variant: string; original: string };
+export type Manifest = { version: string; clips: Clip[]; canon: Canon[]; passes: string[]; frames: number };
+export type Pass = 'beauty' | 'matte' | 'depth' | 'normals';
+export const passes: Pass[] = ['beauty', 'matte', 'depth', 'normals'];
+export const passNames = { beauty: 'Beauty', matte: 'Matte', depth: 'Depth', normals: 'Surface normals' };
+export const frameSrc = (pass: Pass, frame: number) => `/media/passes/${pass}/${String(frame + 1).padStart(4, '0')}.webp`;
+export const clock = (seconds: number) => `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${Math.floor(seconds % 60).toString().padStart(2, '0')}`;
+export const clipTitle = (clip: Clip) => ({ Hero0: 'Hero performance 00', Hero1: 'Hero performance 01', Hero2: 'Hero performance 02', Hero3: 'Hero performance 03', Hero4: 'Hero performance 04', 'V1-0003_true00002899': 'Production observation' }[clip.id] || clip.title);
+export const sectionLinks = [{ id: 'source', label: 'Authoritative asset representation', count: '01' }, { id: 'expression', label: 'Approved Expression', count: '02' }, { id: 'canon', label: 'Creative Canon', count: '03' }, { id: 'semantic', label: 'Semantic Canon', count: '04' }, { id: 'derived', label: 'Derived Identity', count: '05' }];
