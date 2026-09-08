@@ -61,5 +61,9 @@ export async function runWorkspace(req,res,handler,{env=process.env,local=false,
       if(!readonly)await checkpoint();
       res.writeHead(capture.statusCode,capture.headers);res.end(Buffer.concat(capture.chunks));
     },{readonly});
-  }catch(error){if(!res.headersSent)json(res,error.status||503,{message:error.status?error.message:'Shared workspace could not finish saving. Retry without creating a new generation request.',retryable:true});}
+  }catch(error){
+    const message=error.status?error.message:error.message?.includes('authenticate data')?'The workspace encryption key differs between local and production configuration.':error.name?.includes('Access')||error.message?.includes('token')?'The production Blob credential could not access the shared workspace.':error.code==='ENOENT'?'A required workspace file is missing from the deployment.':'Shared workspace could not finish saving. Retry without creating a new generation request.';
+    console.error('Workspace request failed', {name:error.name,code:error.code,message});
+    if(!res.headersSent)json(res,error.status||503,{message,retryable:true});
+  }
 }
