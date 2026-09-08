@@ -34,7 +34,7 @@ Use `.env.example` as the complete configuration checklist. Add values to `.env.
 | Stills | RUNCOMFY_API_KEY; CONTENT_STUDIO_STILL_BACKEND=krea; CONTENT_STUDIO_LIVE_ENABLED=true |
 | Motion | RUNCOMFY_API_KEY; CONTENT_STUDIO_MOTION_ENABLED=true |
 | Shared workspace and references | BLOB_READ_WRITE_TOKEN for the same public Vercel Blob store locally and on Vercel |
-| Hosted workspace access | CONTENT_STUDIO_REVIEWER_TOKEN, or the stable access code written privately by the migration command; localhost connects silently |
+| Demo access | Temporarily open for browsing, generation, curation and export; no access code required |
 | Private media directories | CONTENT_STUDIO_DATA_DIR and CONTENT_STUDIO_MOTION_DATA_DIR; default .local-data/stills and .local-data/motion |
 | Metadata utility | CONTENT_STUDIO_FFPROBE_PATH, or ffprobe on PATH |
 
@@ -120,7 +120,7 @@ Before first use, run from the repository root:
 npm run migrate:workspace
 ```
 
-The command backs up local ledgers/exports, uploads media, and publishes encrypted state. It refuses to replace an existing workspace. Rerunning verifies the existing store and writes its access code to the ignored `.local-data/workspace-access.txt`. Keep that file private. The local originals and migration backup remain untouched. Existing completed/failed jobs, exports, Sandbox entries and removal tombstones are retained. For a fresh workspace with no local history, the command initializes empty ledgers.
+The command backs up local ledgers/exports, uploads media, and publishes encrypted state. It refuses to replace an existing workspace. Rerunning verifies the existing store. The local originals and migration backup remain untouched. Existing completed/failed jobs, exports, Sandbox entries and removal tombstones are retained. For a fresh workspace with no local history, the command initializes empty ledgers.
 
 Open your original localhost browser once before switching to the hosted site: its project selections and custom placements are imported if shared browser settings are empty. The browser retains `gik-pre-cloud-backup` before adopting cloud settings. An existing shared project is never automatically overwritten by another browser's older settings. Legacy browser-only data that conflicts with existing shared settings stays in that backup for manual reconciliation.
 
@@ -128,11 +128,11 @@ After import, application changes save automatically: project briefs, master/sou
 
 This is event-driven synchronization of app operations, not a directory watcher. Editing local JSON with an external script does **not** publish it. Code and bundled media still deploy through Git push. Use the hosted app for a single operational workspace, or localhost for development against the same state.
 
-Hosted access uses an eight-hour HttpOnly, SameSite cookie and same-origin validation. Enter the workspace access code once; this deployment gate is separate from the mock Adobe account. Server credentials never go to the browser. Generation reservations are persisted before provider submission; polling resumes existing jobs after a serverless restart. No background worker is required: provider work continues, and the next active browser poll retrieves its result.
+The demo is temporarily open by explicit owner request: browsing, assistant, generation, shared saves, curation and exports require no access code or cookie. `CONTENT_STUDIO_REVIEWER_TOKEN` is ignored by the shared adapter. Same-origin request validation remains. Server credentials never go to the browser. Generation reservations are persisted before provider submission; polling resumes existing jobs after a serverless restart. No background worker is required: provider work continues, and the next active browser poll retrieves its result.
 
 Metadata is encrypted with AES-256-GCM because the existing Blob store is public. Media remains public to anyone with its URL, as it was before. A conditional writer lease serializes mutations. Public Blob caches mutable content, so authoritative HEAD ETags select immutable encrypted snapshots; conditional writes reject concurrent updates. Expired leases can be recovered after 330 seconds. Failed writes do not publish uncommitted metadata. Historical snapshots/media are retained; garbage collection is intentionally not automatic.
 
-Optional settings: `CONTENT_STUDIO_BLOB_PREFIX` selects a separate workspace; `CONTENT_STUDIO_BLOB_SYNC=false` retains local-only operation. `CONTENT_STUDIO_STATE_SECRET` controls encryption when set, otherwise the Blob token derives the key. **Do not rotate the token or change the state secret without re-encrypting existing state using the old key.** Keep configuration identical locally and remotely. A new prefix needs its own migration. This single-workspace demo access scheme is not enterprise SSO or a multi-tenant authorization system.
+Optional settings: `CONTENT_STUDIO_BLOB_PREFIX` selects a separate workspace; `CONTENT_STUDIO_BLOB_SYNC=false` retains local-only operation. `CONTENT_STUDIO_STATE_SECRET` controls encryption when set, otherwise the Blob token derives the key. **Do not rotate the token or change the state secret without re-encrypting existing state using the old key.** Keep configuration identical locally and remotely. A new prefix needs its own migration. This open, single-workspace demo has no user authorization or enterprise SSO.
 
 About → Technical inspector checks RunComfy configuration/connection; assistant Context and connection reports its own status. A successful lookup is not a successful generation. Cached public media can run without provider keys.
 

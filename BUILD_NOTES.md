@@ -78,3 +78,7 @@ Public deployment, Git staging, and commits have not been performed. The local s
 Migration verified 61 media hashes, 17 original JSON records and 21 removal tombstones against the local originals. Browser project settings were imported separately. Focused checks cover competing writers, failed-operation rollback, stale browser revisions, saved job lists and Blob media redirects. TypeScript/Vite build passes. Hosted provider execution and direct Photoshop editing require separate validation; no new inference is claimed by these checks.
 
 Vercel deployed commit `93c93c7` successfully. Production `/api/workspace` correctly returns 401 before sign-in. Its existing write-only `CONTENT_STUDIO_REVIEWER_TOKEN` differs from the local derived code; authenticated production recovery is pending sign-in with that configured value. The local shared adapter and a simulated hosted request verified login/session and cross-origin rejection. An isolated format preparation from migrated sources produced a 1600×2000 PSD with its original embedded; it did not add a test output to the shared gallery.
+
+## Temporary open demo access
+
+At the owner’s explicit request, all workspace services now operate without an access code or session cookie. The opening screen only hydrates shared state; it has no sign-in form. Existing reviewer-token environment values do not gate the shared adapter. Same-origin validation, request schemas, job recovery and conditional writes remain. This supersedes the deployment sign-in requirement above.

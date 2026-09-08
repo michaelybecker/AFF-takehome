@@ -1,15 +1,10 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Writable } from 'node:stream';
 import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { cloudEnabled, withWorkspace, cloudContext, checkpoint, trustWorkspaceRequest, workspaceRoot, readFile } from './workspace-store.mjs';
 
-export const accessCode = env => env.CONTENT_STUDIO_REVIEWER_TOKEN || createHmac('sha256',env.BLOB_READ_WRITE_TOKEN).update('gik-workspace-access-v1').digest('hex').slice(0,32);
-const equal=(a,b)=>{const x=Buffer.from(a||''),y=Buffer.from(b||'');return x.length===y.length&&timingSafeEqual(x,y);};
-const signature=(env,expiry)=>createHmac('sha256',accessCode(env)).update(expiry).digest('hex');
 const json=(res,status,value)=>{res.writeHead(status,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify(value));};
 function origin(req,local){const host=req.headers.host||'',o=req.headers.origin;if(local)return /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)&&['127.0.0.1','::1','::ffff:127.0.0.1'].includes(req.socket?.remoteAddress)&&(!o||o===`http://${host}`)&&!['cross-site','same-site'].includes(req.headers['sec-fetch-site']);return !!host&&(!o||o===`https://${host}`)&&!['cross-site','same-site'].includes(req.headers['sec-fetch-site']);}
-function authorized(req,env,local){if(local)return true;const cookie=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('gik_workspace='))?.slice(14)||'';const [expires,sig]=cookie.split('.');return Number(expires)>Date.now()&&Number(expires)<Date.now()+9*3600000&&equal(signature(env,expires),sig);}
 async function body(req,max=1024*1024){if(req.body!==undefined){if(Buffer.byteLength(JSON.stringify(req.body))>max)throw Error('Request too large');return req.body;}let text='';for await(const b of req){text+=b;if(Buffer.byteLength(text)>max)throw Error('Request too large');}return JSON.parse(text||'{}');}
 class Capture extends Writable{
   constructor(){super();this.statusCode=200;this.headers={};this.chunks=[];this.done=new Promise(resolve=>this.on('finish',resolve));}
@@ -19,7 +14,7 @@ class Capture extends Writable{
 }
 export async function runWorkspace(req,res,handler,{env=process.env,local=false,service='workspace'}={}){
   if(!cloudEnabled(env)){
-    if(local&&service!=='workspace')return handler(req,res,{env,local});
+    if(local&&service!=='workspace'){trustWorkspaceRequest(req);return handler(req,res,{env,local});}
     if(local&&service==='workspace'&&origin(req,true))return json(res,200,{authorized:true,mode:'local',revision:0,values:{}});
     return json(res,503,{message:'Shared workspace storage is not configured.',retryable:false});
   }
@@ -28,10 +23,9 @@ export async function runWorkspace(req,res,handler,{env=process.env,local=false,
     const url=new URL(req.url,'http://localhost'),action=url.searchParams.get('action')||'status';
     if(service==='workspace'&&action==='session'&&req.method==='POST'){
       if(req.headers['x-content-studio']!=='1')return json(res,403,{message:'Application request required.'});
-      const input=await body(req,2048);if(!local&&!equal(String(input.token||''),accessCode(env)))return json(res,403,{message:'Workspace access code was not accepted.'});
-      const expiry=String(Date.now()+8*3600000);res.setHeader('Set-Cookie',`gik_workspace=${expiry}.${signature(env,expiry)}; HttpOnly; SameSite=Strict; Path=/api; Max-Age=28800${local?'':'; Secure'}`);return json(res,200,{authorized:true});
+      return json(res,200,{authorized:true});
     }
-    if(!authorized(req,env,local))return json(res,401,{message:'Enter the workspace access code to continue.',authorizationRequired:true,retryable:false});
+    // Temporary open demo: no access code or session is required for any service.
     if(!['GET','HEAD'].includes(req.method)&&(req.headers['x-content-studio']!=='1'||!req.headers['content-type']?.startsWith('application/json')))return json(res,403,{message:'Application request required.'});
     // Read-only operations do not take a writer lease. Active jobs progress through job polling.
     const readonly=['GET','HEAD'].includes(req.method)&&action!=='job';

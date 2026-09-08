@@ -4,14 +4,10 @@ let pending: Record<string,string> = {};
 let conflict = false, localOnly = false;
 let shared: Record<string,string> = {};
 const status = (message: string) => window.dispatchEvent(new CustomEvent('workspace-sync', {detail: message}));
-export async function initializeWorkspace(token?: string) {
-  if (token !== undefined) {
-    const login = await fetch('/api/workspace?action=session', {method:'POST',headers:{'Content-Type':'application/json','X-Content-Studio':'1'},body:JSON.stringify({token})});
-    if(!login.ok) throw Error('Workspace access code was not accepted.');
-  }
+export async function initializeWorkspace() {
   const response = await fetch('/api/workspace', {cache:'no-store'});
   const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : {mode:'local',revision:0,values:{}};
-  if(!response.ok) throw Object.assign(Error(data.message || 'Shared workspace unavailable.'),{authorizationRequired:response.status===401});
+  if(!response.ok) throw Error(data.message || 'Shared workspace unavailable.');
   revision=data.revision;
   localOnly=data.mode==='local';
   shared={...data.values};
