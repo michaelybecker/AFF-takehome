@@ -1,3 +1,4 @@
+import { isWorkspaceRequest } from './workspace-store.mjs';
 import { readFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { visionContent } from './assistant-vision.mjs';
@@ -104,7 +105,7 @@ export async function handleAssistant(req, res, { local = false, env = process.e
   let acquired = false;
   try {
     if (!local) return send(res, 503, { ...status, available: false });
-    if (!localRequest(req)) fail(403, 'Use Studio Assistant from the local application.');
+    if (!isWorkspaceRequest(req) && !localRequest(req)) fail(403, 'Use Studio Assistant from the local application.');
     const url = new URL(req.url, 'http://localhost');
     if (req.method === 'GET' && url.search === '?action=status') return send(res, 200, status);
     if (req.method !== 'POST') { res.setHeader('Allow', 'GET, POST'); fail(405, 'Method not allowed.'); }

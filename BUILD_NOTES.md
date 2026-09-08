@@ -68,3 +68,11 @@ The revised mission requires real image-LoRA training/use/comparison, curated Ma
 Later interaction refinement (same date): single-click media expansion superseded the initially tested double-click entry, and canonical tiles gained independent hover playback while expanded pass switching retained frame synchronization. Labels now read Canonical Identity Kit and Authoritative asset representation; the workspace uses the Marvel logo in a square tile. Earlier verification bullets are retained as historical observations rather than rewritten as new tests.
 
 Public deployment, Git staging, and commits have not been performed. The local server is available for review; staging and committing remain behind explicit user approval.
+
+## Shared workspace implementation (September 8)
+
+`server/workspace-store.mjs` adapts the existing file-based services to an encrypted Blob snapshot with immutable media and conditional writer leases. `server/workspace.mjs` supplies the hosted access cookie, same-origin checks, shared assistant request spacing, media redirects and request-scoped temporary files. Both Vite and the Vercel API adapters use this path.
+
+`src/workspaceSync.ts` synchronizes project and placement settings with revision checks; `WorkspaceGate` hydrates settings before loading the application. Sandbox tombstones, generation reservations and ADAPT outputs persist through their server handlers. Provider polling resumes existing jobs; no inference is needed to migrate records.
+
+Migration verified 61 media hashes, 17 original JSON records and 21 removal tombstones against the local originals. Browser project settings were imported separately. Focused checks cover competing writers, failed-operation rollback, stale browser revisions, saved job lists and Blob media redirects. TypeScript/Vite build passes. Hosted provider execution and direct Photoshop editing require separate validation; no new inference is claimed by these checks.

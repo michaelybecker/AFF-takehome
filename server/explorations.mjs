@@ -1,24 +1,25 @@
-import { readFile, writeFile, mkdir, rename } from 'node:fs/promises';
+import { readFile, workspaceRoot, checkpoint, isWorkspaceRequest } from './workspace-store.mjs';
+import { writeFile, mkdir, rename } from 'node:fs/promises';
 import path from 'node:path';
-import { put, del } from '@vercel/blob';
+import { put } from '@vercel/blob';
 import { publicJob as stillJob } from './stills.mjs';
 import { publicJob as motionJob } from './motion.mjs';
 
 const state = globalThis[Symbol.for('studio.explorations')] ||= { busy: false };
-const registry = path.resolve('.local-data/explorations.json');
+const registry = () => path.join(workspaceRoot(), 'explorations.json');
 async function readRegistry() {
-  try { return JSON.parse(await readFile(registry, 'utf8')); }
+  try { return JSON.parse(await readFile(registry(), 'utf8')); }
   catch (error) { if (error.code === 'ENOENT') return { entries: [], removed: [] }; throw error; }
 }
 async function save(value) {
-  await mkdir(path.dirname(registry), { recursive: true });
-  await writeFile(registry + '.tmp', JSON.stringify(value), { mode: 0o600 });
-  await rename(registry + '.tmp', registry);
+  await mkdir(path.dirname(registry()), { recursive: true });
+  await writeFile(registry() + '.tmp', JSON.stringify(value), { mode: 0o600 });
+  await rename(registry() + '.tmp', registry()); await checkpoint();
 }
 const reply = (res, status, value) => { res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }); res.end(JSON.stringify(value)); };
 export async function handleExplorations(req, res, { env }) {
   const host = req.headers.host || '';
-  if (!/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host) || !['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress) || (req.headers.origin && req.headers.origin !== `http://${host}`) || ['cross-site', 'same-site'].includes(req.headers['sec-fetch-site'])) return reply(res, 403, { message: 'Use project curation from the local application.' });
+  if (!isWorkspaceRequest(req) && (!/^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host) || !['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress) || (req.headers.origin && req.headers.origin !== `http://${host}`) || ['cross-site', 'same-site'].includes(req.headers['sec-fetch-site']))) return reply(res, 403, { message: 'Use project curation from the local application.' });
   let locked = false;
   try {
     if (req.method === 'GET') {
@@ -28,8 +29,8 @@ export async function handleExplorations(req, res, { env }) {
     if (req.method !== 'POST' || req.headers['x-content-studio'] !== '1' || !req.headers['content-type']?.startsWith('application/json')) return reply(res, 405, { message: 'Use the application curation controls.' });
     if (state.busy) return reply(res, 409, { message: 'Another curation change is running. Retry shortly.' });
     state.busy = true; locked = true;
-    let body = ''; for await (const chunk of req) { body += chunk; if (body.length > 1024) return reply(res, 413, { message: 'Request too large.' }); }
-    const input = JSON.parse(body);
+    let body = ''; if (req.body === undefined) for await (const chunk of req) { body += chunk; if (body.length > 1024) return reply(res, 413, { message: 'Request too large.' }); }
+    const input = req.body !== undefined ? req.body : JSON.parse(body);
     if (!['save', 'delete'].includes(input.action) || typeof input.id !== 'string' || !/^[a-zA-Z0-9-]{1,200}$/.test(input.id) || !['still', 'motion'].includes(input.kind)) return reply(res, 400, { message: 'Invalid exploration selection.' });
     const data = await readRegistry();
     const existing = data.entries.find(e => e.asset.id === input.id);
@@ -40,16 +41,6 @@ export async function handleExplorations(req, res, { env }) {
       try { const jobs = JSON.parse(await readFile(path.join(root, 'jobs.json'), 'utf8')); generated = jobs.jobs.some(j => j.id === input.id && j.status === 'completed'); }
       catch (error) { if (error.code !== 'ENOENT') throw error; }
       if (!existing && !(manifest.campaignMasters || []).some(a => a.id === input.id) && !generated && !data.removed.includes(input.id)) return reply(res, 404, { message: 'Sandbox item not found.' });
-      if (existing) {
-        const token = env.BLOB_READ_WRITE_TOKEN;
-        if (existing.paths.length && !token) return reply(res, 503, { message: 'Set BLOB_READ_WRITE_TOKEN on the server.' });
-        existing.status = 'deleting'; await save(data);
-        // Delete only objects owned by this registry, never shared identity/reference files.
-        if (existing.paths.some(p => !p.startsWith('firefly-demo/project-explorations/'))) throw new Error('Invalid owned path');
-        if (existing.paths.length) {
-          await del(existing.paths, { token });
-        }
-      }
       data.entries = data.entries.filter(e => e.asset.id !== input.id);
       data.removed = [...new Set([...data.removed, input.id])]; await save(data);
       return reply(res, 200, { deleted: input.id });

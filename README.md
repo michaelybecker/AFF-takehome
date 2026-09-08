@@ -20,7 +20,7 @@ npm ci
 npm run dev
 ```
 
-The checked-in browser media is sufficient for browsing the demo without provider keys. Do not run media preparation for a normal clone: those optional scripts require the original source workspace. Private Sandbox jobs, deletion history and browser project selections are machine-specific and are not included in Git.
+The checked-in browser media is sufficient for browsing the demo without provider keys. Do not run media preparation for a normal clone: those optional scripts require the original source workspace. Private jobs and project state are not included in Git. When Blob sync is configured, local and hosted sessions share the migrated workspace.
 
 To enable live services, copy `.env.example` to `.env.local` (PowerShell: `Copy-Item .env.example .env.local`; macOS/Linux: `cp .env.example .env.local`), fill in the relevant server credentials and restart Vite. Generation also depends on access to the configured model/checkpoint and hosted references; credentials alone do not recreate the original training environment. Do not overwrite an existing `.env.local`.
 
@@ -33,8 +33,8 @@ Use `.env.example` as the complete configuration checklist. Add values to `.env.
 | Assistant | OPENAI_API_KEY; optional OPENAI_MODEL (code default gpt-5.4) |
 | Stills | RUNCOMFY_API_KEY; CONTENT_STUDIO_STILL_BACKEND=krea; CONTENT_STUDIO_LIVE_ENABLED=true |
 | Motion | RUNCOMFY_API_KEY; CONTENT_STUDIO_MOTION_ENABLED=true |
-| Hosted input references | BLOB_READ_WRITE_TOKEN for the configured public Vercel Blob store |
-| Optional reviewer token | CONTENT_STUDIO_REVIEWER_TOKEN; local default authorization is established silently by the signed-in demo |
+| Shared workspace and references | BLOB_READ_WRITE_TOKEN for the same public Vercel Blob store locally and on Vercel |
+| Hosted workspace access | CONTENT_STUDIO_REVIEWER_TOKEN, or the stable access code written privately by the migration command; localhost connects silently |
 | Private media directories | CONTENT_STUDIO_DATA_DIR and CONTENT_STUDIO_MOTION_DATA_DIR; default .local-data/stills and .local-data/motion |
 | Metadata utility | CONTENT_STUDIO_FFPROBE_PATH, or ffprobe on PATH |
 
@@ -44,9 +44,9 @@ Historical direct-Comfy configuration exists for recovery, not new Krea submissi
 
 IDENTITY / CREATE / ANIMATE / ADAPT are peer header tabs. Hash routes are #/identity and #/activate/create, #/activate/animate, #/activate/adapt; ACTIVATE is not a visible parent. Sidebars link to contextual sections, not duplicated workspace tabs. Michael Becker's account panel is a Firefly-inspired mock signed-in view, not hosted authentication.
 
-Project briefs and settings use browser storage `content-studio-missions-v1`. Still master, motion master and animationSourceId persist. Custom placements use `gik-custom-placements-v1`. Assistant conversation/evidence is session state; it is not durable chat history or access to Codex conversations.
+Project briefs and settings sync to Blob and retain a browser cache in `content-studio-missions-v1`. Still master, motion master and animationSourceId persist. Custom placements use `gik-custom-placements-v1`. Assistant conversation/evidence is session state; it is not durable chat history or access to Codex conversations.
 
-Sandbox combines prepared candidates with completed jobs recovered from durable local history. Removal uses server tombstones in `.local-data/explorations.json`, reconciled with browser state. It survives reload; never clear that ledger to reset a gallery. Removal keeps private generation provenance and shared identity media; owned uploaded Blob media may be deleted. Both still/motion galleries allow drag to master and assistant, card actions and modal handoffs. Galleries/pickers paginate after eight; viewer arrows stay within the full category. Page controls do not explicitly scroll.
+Sandbox combines prepared candidates with completed jobs recovered from the shared durable history. Removal uses server tombstones in `.local-data/explorations.json`, reconciled with browser state. It survives reload; never clear that ledger to reset a gallery. Removal keeps private generation provenance and shared identity media; removal hides the item without deleting shared media or provenance. Both still/motion galleries allow drag to master and assistant, card actions and modal handoffs. Galleries/pickers paginate after eight; viewer arrows stay within the full category. Page controls do not explicitly scroll.
 
 ## Generation and source lineage
 
@@ -56,13 +56,13 @@ ANIMATE uses H3 Max image-to-video with one explicit starting image, mode=image-
 
 `node scripts/host-references.mjs` explicitly publishes reference images using Blob configuration, verifies content hashes and writes `server/hosted-references.json`. Source and generated references retain distinct lineage. Public URLs remain available until removed; rebuilding a catalog does not delete old objects. No arbitrary user-upload flow is implied.
 
-Local `/api/stills` and `/api/motion` establish separate local sessions and keep jobs/media privately. Preserve request UUIDs for idempotent recovery. There is one unresolved job per service and submission spacing; queued/unknown outcomes must be reconciled before replacements. Do not delete ledgers/locks to bypass unresolved work. Provider cancellation must be confirmed; a local stop is not cancellation proof. Keep the stopped tenth breadth job excluded.
+`/api/stills` and `/api/motion` use the shared authenticated workspace when Blob sync is enabled, or local sessions and files without it. Preserve request UUIDs for idempotent recovery. There is one unresolved job per service and submission spacing; queued/unknown outcomes must be reconciled before replacements. Do not delete ledgers/locks to bypass unresolved work. Provider cancellation must be confirmed; a local stop is not cancellation proof. Keep the stopped tenth breadth job excluded.
 
 Completed results retain input/model/checkpoint/source metadata and hashes. Motion metadata is measured with ffprobe when available; fallback/requested duration must retain its provenance. Source aspect/duration requests are not proof of exact output dimensions/timing. Media endpoints support authenticated retrieval and video byte ranges. Provider errors and keys stay server-side.
 
 ## Assistant transport and communication
 
-The local OpenAI-backed AI Assistant (Beta) receives supplied conversation, app snapshot and optional visual evidence. It is neither Adobe Firefly Assistant nor Codex. [assistant-skills.md](server/assistant-skills.md) is loaded as runtime instructions; `server/assistant.mjs` owns strict schemas and validation, `src/assistant-bridge.ts` owns frontend execution/receipts, and `src/StudioAssistant.tsx` owns conversation/proposals.
+The OpenAI-backed AI Assistant (Beta) receives supplied conversation, app snapshot and optional visual evidence. It is neither Adobe Firefly Assistant nor Codex. [assistant-skills.md](server/assistant-skills.md) is loaded as runtime instructions; `server/assistant.mjs` owns strict schemas and validation, `src/assistant-bridge.ts` owns frontend execution/receipts, and `src/StudioAssistant.tsx` owns conversation/proposals.
 
 One chronological docked/expanded conversation supports project/brief proposals, navigation, master selection, requested generation, regeneration and review. Explicit create/animate/iterate requests set confirmRequired=false and start directly. Prompt-only options use true and stay editable. Navigation/identity inspection run directly; project/brief/master changes retain Apply controls. Attachment or critique alone does not generate. Regenerate keeps the original and uses a fresh seed.
 
@@ -88,7 +88,7 @@ Legacy mission identifiers remain internal. update_brief retains old copy/graphi
 
 ## ADAPT: prepare one format, then export
 
-`server/deliveries.mjs`, `src/Activate.tsx`, `src/DeliveryOutputs.tsx` and `src/DeliveryPreview.tsx` implement local format preparation. No provider inference is called. Choose one master/preset or create one custom placement, frame it, click Prepare format, review, then export. Saved history is scoped to the selected placement.
+`server/deliveries.mjs`, `src/Activate.tsx`, `src/DeliveryOutputs.tsx` and `src/DeliveryPreview.tsx` implement format preparation. No provider inference is called. Choose one master/preset or create one custom placement, frame it, click Prepare format, review, then export. Saved history is scoped to the selected placement.
 
 Default dimensions: A01 1600×2400 still; A02 1600×2000 still; A03 1080×1920 motion; A04 1920×1080 motion. Custom dimensions 64–4096 per axis, even for motion. These are demo canvases, not delivery compliance.
 
@@ -96,7 +96,7 @@ Stills use Sharp for a transparent PNG preview and ag-psd for a PSD containing a
 
 Motion uses ffmpeg scale/crop/pad and H.264/AAC MP4 with available source audio. It is flattened media for downstream editing, not a native Premiere/After Effects project. Existing flattened PNG/MP4 outputs remain intact and labeled.
 
-POST /api/deliveries validates local access, selected source, layout and dimensions, prepares one version and returns metadata. GET with action=list and campaignId lists saved records; action=file&id=... serves preview/media; format=psd serves the editable file; download=1 uses attachment disposition. Source files resolve from trusted project job/asset records, not arbitrary client paths. Work is serialized and request IDs are idempotent. PNG/MP4/PSD and JSON live in `.local-data/deliveries`; metadata is published after preparation succeeds. No bulk export or native video project format is implemented.
+POST /api/deliveries validates workspace access, selected source, layout and dimensions, prepares one version and returns metadata. GET with action=list and campaignId lists saved records; action=file&id=... serves preview/media; format=psd serves the editable file; download=1 uses attachment disposition. Source files resolve from trusted project job/asset records, not arbitrary client paths. Work is serialized and request IDs are idempotent. PNG/MP4/PSD and JSON use Blob in shared mode, or `.local-data/deliveries` in local mode; metadata is published after preparation succeeds. No bulk export or native video project format is implemented.
 
 Prepare format saves and opens its viewer without downloading. Export to computer downloads that saved PSD/MP4. Export to Creative Cloud opens an explicit disabled destination mockup, not an upload. [Adobe's cloud-export documentation](https://helpx.adobe.com/photoshop/desktop/save-and-export/export-files-to-different-formats/export-to-cloud.html) informed the proposed destination; no SDK integration is claimed.
 
@@ -108,7 +108,31 @@ PSD structure, source-byte equality, transparency and download have been verifie
 
 The source collections and generated showcase are distinct. Requested additions are Stratosphere, After the landing and Harajuku landing. Showcase selection is not approval. User curation overrides automatic imports. See [build notes](BUILD_NOTES.md) for implementation evidence and verification limits.
 
-Vite middleware handles local APIs. Hosted assistant/generation entry points remain disabled until authentication, shared durable storage and distributed coordination exist. No hosted delivery adapter is implemented. A static dist deployment supports only its bundled/hosted media; local private results do not become deployable automatically. Configure reviewer access and asset retention before claiming a hosted release.
+Vite middleware and Vercel API functions use the same shared-workspace adapter. `vercel.json` includes the manifest, runtime instructions/catalogs and Linux ffmpeg binary. Vercel serves public reference media as static files; functions fetch trusted references when needed. API functions have a 300-second maximum duration. Provider configuration and access must also exist in the deployment environment; a successful build alone does not prove provider execution.
+
+## Shared Blob workspace and migration
+
+Use the **same** `BLOB_READ_WRITE_TOKEN` in `.env.local` and Vercel Production. No Redis/database variable is required. Existing source-reference URLs remain intact.
+
+Before first use, run from the repository root:
+
+```sh
+npm run migrate:workspace
+```
+
+The command backs up local ledgers/exports, uploads media, and publishes encrypted state. It refuses to replace an existing workspace. Rerunning verifies the existing store and writes its access code to the ignored `.local-data/workspace-access.txt`. Keep that file private. The local originals and migration backup remain untouched. Existing completed/failed jobs, exports, Sandbox entries and removal tombstones are retained. For a fresh workspace with no local history, the command initializes empty ledgers.
+
+Open your original localhost browser once before switching to the hosted site: its project selections and custom placements are imported if shared browser settings are empty. The browser retains `gik-pre-cloud-backup` before adopting cloud settings. An existing shared project is never automatically overwritten by another browser's older settings. Legacy browser-only data that conflicts with existing shared settings stays in that backup for manual reconciliation.
+
+After import, application changes save automatically: project briefs, master/source choices, placements, Sandbox curation, job history and prepared exports. Browser settings debounce for 600 ms and retry transient errors. Wait for the saved status before closing. Conflicting edits remain on the device and ask you to reload; they do not silently overwrite another session. Gallery/job data refresh on access/polling. Assistant conversation itself remains session-only.
+
+This is event-driven synchronization of app operations, not a directory watcher. Editing local JSON with an external script does **not** publish it. Code and bundled media still deploy through Git push. Use the hosted app for a single operational workspace, or localhost for development against the same state.
+
+Hosted access uses an eight-hour HttpOnly, SameSite cookie and same-origin validation. Enter the workspace access code once; this deployment gate is separate from the mock Adobe account. Server credentials never go to the browser. Generation reservations are persisted before provider submission; polling resumes existing jobs after a serverless restart. No background worker is required: provider work continues, and the next active browser poll retrieves its result.
+
+Metadata is encrypted with AES-256-GCM because the existing Blob store is public. Media remains public to anyone with its URL, as it was before. A conditional writer lease serializes mutations. Public Blob caches mutable content, so authoritative HEAD ETags select immutable encrypted snapshots; conditional writes reject concurrent updates. Expired leases can be recovered after 330 seconds. Failed writes do not publish uncommitted metadata. Historical snapshots/media are retained; garbage collection is intentionally not automatic.
+
+Optional settings: `CONTENT_STUDIO_BLOB_PREFIX` selects a separate workspace; `CONTENT_STUDIO_BLOB_SYNC=false` retains local-only operation. `CONTENT_STUDIO_STATE_SECRET` controls encryption when set, otherwise the Blob token derives the key. **Do not rotate the token or change the state secret without re-encrypting existing state using the old key.** Keep configuration identical locally and remotely. A new prefix needs its own migration. This single-workspace demo access scheme is not enterprise SSO or a multi-tenant authorization system.
 
 About → Technical inspector checks RunComfy configuration/connection; assistant Context and connection reports its own status. A successful lookup is not a successful generation. Cached public media can run without provider keys.
 

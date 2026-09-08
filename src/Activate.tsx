@@ -1,3 +1,4 @@
+import { saveWorkspaceValue } from './workspaceSync';
 import CreatePlacement, { loadPlacements } from './CreatePlacement';
 
 import PaginatedGallery from './PaginatedGallery';
@@ -58,10 +59,10 @@ export default function Activate({ mode, manifest }: { mode: Mode; manifest: Man
   const artifactId = isCreate ? (kind === 'still' ? 'C01' : 'C02') : placement.id;
   const candidates = masters.filter(m => m.kind === kind);
   useEffect(() => { setNotice(''); setViewer(null); setShowLayout(false); setStartingFrame(undefined); }, [mode, campaignId]);
-  useEffect(() => { try { localStorage.setItem(missionStorageKey, JSON.stringify(missions)); } catch { setNotice('Local storage unavailable. Download the brief to keep it.'); } }, [missions]);
+  useEffect(() => { try { saveWorkspaceValue(missionStorageKey, JSON.stringify(missions)); } catch { setNotice('Local storage unavailable. Download the brief to keep it.'); } }, [missions]);
   const update = (value: Partial<Draft>) => { setMissions(previous => ({ ...previous, missions: previous.missions.map(m => m.id === campaignId ? { ...m, draft: { ...m.draft, ...value } } : m) })); setNotice(''); };
-  const persist = () => { try { localStorage.setItem(missionStorageKey, JSON.stringify(missions)); return true; } catch { return false; } };
-  const save = () => setNotice(persist() ? 'Brief saved on this device.' : 'Local storage unavailable. Download the brief to keep it.');
+  const persist = () => { try { saveWorkspaceValue(missionStorageKey, JSON.stringify(missions)); return true; } catch { return false; } };
+  const save = () => setNotice(persist() ? 'Brief saved locally; shared workspace sync is automatic.' : 'Local storage unavailable. Download the brief to keep it.');
   const request = (): GenerationRequest => ({
     id: crypto.randomUUID(), mode, identity: 'iron_man_mark_iii', identityKitVersion: manifest.version,
     adaptationId: isCreate && kind === 'still' ? manifest.derived?.adaptation.id || null : null,

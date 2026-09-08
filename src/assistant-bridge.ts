@@ -1,3 +1,4 @@
+import { saveWorkspaceValue } from './workspaceSync';
 import { useSyncExternalStore } from 'react';
 import { initialMissions, missionStorageKey, newMission, type MissionState } from './missions';
 import { clipTitle, type CampaignMaster, type Manifest } from './data';
@@ -41,7 +42,7 @@ const subscribe = (fn: () => void) => { listeners.add(fn); return () => { listen
 const emit = () => listeners.forEach(fn => fn());
 export function setStudioMissions(value: MissionState | ((previous: MissionState) => MissionState)) {
   missions = typeof value === 'function' ? value(missions) : value;
-  try { localStorage.setItem(missionStorageKey, JSON.stringify(missions)); } catch { /* In-memory workspace remains usable. */ }
+  try { saveWorkspaceValue(missionStorageKey, JSON.stringify(missions)); } catch { /* In-memory workspace remains usable. */ }
   emit();
 }
 export function setStudioAssets(value: CampaignMaster[] | ((previous: CampaignMaster[]) => CampaignMaster[])) {

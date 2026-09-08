@@ -1,5 +1,6 @@
+import { readFile, ensureLocal, checkpoint, isWorkspaceRequest, mediaEntry } from './workspace-store.mjs';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
-import { mkdir, readFile, writeFile, rename, open, unlink } from 'node:fs/promises';
+import { mkdir, writeFile, rename, open, unlink } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { diagnostics, recordDiagnostics, recoveryReason } from './job-diagnostics.mjs';
@@ -28,12 +29,13 @@ function config(env, local) {
   const apiKey = env.RUNCOMFY_API_KEY?.trim();
   const expiresAt = backend !== 'comfy' ? Infinity : Date.parse(env.RUNCOMFY_COMFY_EXPIRES_AT || '');
   const reserve = 0;
-  return { endpoint, backend, deploymentId, apiKey, expiresAt, local, root: path.resolve(env.CONTENT_STUDIO_DATA_DIR || '.local-data/stills'),
+  return { shared: env.CONTENT_STUDIO_SHARED_CONTEXT === 'true', endpoint, backend, deploymentId, apiKey, expiresAt, local, root: path.resolve(env.CONTENT_STUDIO_DATA_DIR || '.local-data/stills'),
     secret: env.CONTENT_STUDIO_REVIEWER_TOKEN || (local ? localSessionKey : ''),
     enabled: local && env.CONTENT_STUDIO_LIVE_ENABLED === 'true' && (backend === 'krea' ? !!apiKey : backend === 'serverless' ? !!deploymentId && !!apiKey : backend === 'comfy' && !!endpoint && Number.isFinite(expiresAt) && Date.now() < expiresAt),
     reserve };
 }
 function originAllowed(req, local) {
+  if (isWorkspaceRequest(req)) return true;
   const host = req.headers.host || '';
   const origin = req.headers.origin;
   if (local) {
@@ -44,6 +46,7 @@ function originAllowed(req, local) {
   return false;
 }
 function authorized(req, cfg) {
+  if (isWorkspaceRequest(req)) return true;
   const cookie = (req.headers.cookie || '').split(';').map(v => v.trim()).find(v => v.startsWith('cs_reviewer='))?.slice(12) || '';
   const [expiry, signature] = cookie.split('.');
   return cfg.secret && Number(expiry) > Date.now() && Number(expiry) < Date.now() + 9 * 3600000
@@ -81,6 +84,7 @@ async function save(cfg, state) {
   const temporary = path.join(cfg.root, `${randomUUID()}.tmp`);
   await writeFile(temporary, JSON.stringify(state), { mode: 0o600 });
   await rename(temporary, path.join(cfg.root, 'jobs.json'));
+  await checkpoint();
 }
 async function locked(cfg, operation) {
   await mkdir(cfg.root, { recursive: true });
@@ -260,6 +264,7 @@ async function syncJob(cfg, id) {
   });
 }
 function watch(cfg, id) {
+  if (cfg.shared) return;
   if (workers.has(id)) return;
   workers.add(id);
   const timer = setInterval(async () => {
@@ -282,7 +287,7 @@ export async function handleStills(req, res, { local = false, env = process.env 
     if (method === 'POST' && req.headers['x-content-studio'] !== '1') fail(403, 'Reviewer request verification failed.');
     if (action === 'session') {
       const input = await body(req);
-      if (env.CONTENT_STUDIO_REVIEWER_TOKEN && !equal(String(input?.token || ''), env.CONTENT_STUDIO_REVIEWER_TOKEN)) fail(403, 'Reviewer credential was not accepted.');
+      if (!isWorkspaceRequest(req) && env.CONTENT_STUDIO_REVIEWER_TOKEN && !equal(String(input?.token || ''), env.CONTENT_STUDIO_REVIEWER_TOKEN)) fail(403, 'Reviewer credential was not accepted.');
       if (!env.CONTENT_STUDIO_REVIEWER_TOKEN && input?.localReviewer !== true) fail(403, 'Local reviewer authorization is required.');
       const expiry = String(Date.now() + 8 * 3600000);
       const signature = createHmac('sha256', cfg.secret).update(expiry).digest('hex');
@@ -298,7 +303,7 @@ export async function handleStills(req, res, { local = false, env = process.env 
       }
       const state = await load(cfg);
       for (const job of state.jobs.filter(j => active.has(j.status) && j.providerId)) watch(cfg, job.id);
-      return send(res, 200, { available, temporary: cfg.backend === 'comfy', authorized: auth, tokenRequired: !!env.CONTENT_STUDIO_REVIEWER_TOKEN,
+      return send(res, 200, { available, temporary: cfg.backend === 'comfy', authorized: auth, tokenRequired: !isWorkspaceRequest(req) && !!env.CONTENT_STUDIO_REVIEWER_TOKEN,
         message: available ? 'Live stills available for review.' : 'Live stills unavailable. Prepared briefs and saved assets remain available.',
         remainingJobs: null, allowanceLimited: false,
         activeJob: state.jobs.some(j => active.has(j.status)), videoAvailable: false });

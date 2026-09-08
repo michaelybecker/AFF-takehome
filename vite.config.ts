@@ -1,3 +1,4 @@
+import { runWorkspace } from './server/workspace.mjs';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { checkConnection } from './server/runcomfy.mjs';
@@ -13,29 +14,12 @@ export default defineConfig({
     name: 'local-runcomfy-api',
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
-        if (req.url?.split('?')[0] === '/api/deliveries') {
-          void handleDeliveries(req, res, { env: loadEnv(server.config.mode, server.config.envDir, '') }); return;
-        }
-        if (req.url?.split('?')[0] === '/api/explorations') {
-          void handleExplorations(req, res, { env: loadEnv(server.config.mode, server.config.envDir, '') });
-          return;
+        const services = { stills: handleStills, motion: handleMotion, assistant: handleAssistant, explorations: handleExplorations, deliveries: handleDeliveries, workspace: null };
+        const service = req.url?.split('?')[0].replace('/api/', '') as keyof typeof services;
+        if (Object.prototype.hasOwnProperty.call(services, service)) {
+          void runWorkspace(req, res, services[service], {service, local: true, env: loadEnv(server.config.mode, server.config.envDir, '')}); return;
         }
         if (req.url?.includes('.local-data')) { res.statusCode = 403; res.end('Private application data.'); return; }
-        if (req.url?.split('?')[0] === '/api/assistant') {
-          const env = loadEnv(server.config.mode, server.config.envDir, '');
-          void handleAssistant(req, res, { local: true, env });
-          return;
-        }
-        if (req.url?.split('?')[0] === '/api/motion') {
-          const env = loadEnv(server.config.mode, server.config.envDir, '');
-          void handleMotion(req, res, { local: true, env });
-          return;
-        }
-        if (req.url?.split('?')[0] === '/api/stills') {
-          const env = loadEnv(server.config.mode, server.config.envDir, '');
-          void handleStills(req, res, { local: true, env });
-          return;
-        }
         if (req.url?.split('?')[0] !== '/api/runcomfy/check') return next();
         const env = loadEnv(server.config.mode, server.config.envDir, 'RUNCOMFY_');
         void checkConnection(req, res, { local: true, apiKey: env.RUNCOMFY_API_KEY });

@@ -1,5 +1,6 @@
+import { readFile, ensureLocal, checkpoint, isWorkspaceRequest, mediaEntry } from './workspace-store.mjs';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
-import { mkdir, readFile, rename, open, unlink } from 'node:fs/promises';
+import { mkdir, rename, open, unlink } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { pipeline } from 'node:stream/promises';
@@ -49,7 +50,7 @@ const equal = (a, b) => { const x = Buffer.from(a); const y = Buffer.from(b); re
 const send = (res, status, body) => { res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }); res.end(JSON.stringify(body)); };
 function config(env, local) {
   const apiKey = env.RUNCOMFY_API_KEY?.trim();
-  return { apiKey, local,
+  return { shared: env.CONTENT_STUDIO_SHARED_CONTEXT === 'true', apiKey, local,
     enabled: local && env.CONTENT_STUDIO_LIVE_ENABLED === 'true' && env.CONTENT_STUDIO_MOTION_ENABLED !== 'false' && !!apiKey,
     root: path.resolve(env.CONTENT_STUDIO_MOTION_DATA_DIR || '.local-data/motion'),
     stillRoot: path.resolve(env.CONTENT_STUDIO_DATA_DIR || '.local-data/stills'),
@@ -57,6 +58,7 @@ function config(env, local) {
     ffprobe: env.CONTENT_STUDIO_FFPROBE_PATH || 'ffprobe' };
 }
 function originAllowed(req) {
+  if (isWorkspaceRequest(req)) return true;
   const host = req.headers.host || '';
   return /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host)
     && ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket?.remoteAddress)
@@ -64,6 +66,7 @@ function originAllowed(req) {
     && !['cross-site', 'same-site'].includes(req.headers['sec-fetch-site']);
 }
 function authorized(req, cfg) {
+  if (isWorkspaceRequest(req)) return true;
   const cookie = (req.headers.cookie || '').split(';').map(v => v.trim()).find(v => v.startsWith('cs_motionreviewer='))?.slice('cs_motionreviewer='.length) || '';
   const [expiry, signature] = cookie.split('.');
   return Number(expiry) > Date.now() && Number(expiry) < Date.now() + 9 * 3600000
@@ -112,7 +115,7 @@ async function atomicWrite(filename, bytes) {
   try { await file.writeFile(bytes); await file.sync(); } finally { await file.close(); }
   await rename(temporary, filename);
 }
-const save = (cfg, state) => { state.jobs.forEach(recordDiagnostics); return atomicWrite(path.join(cfg.root, 'jobs.json'), JSON.stringify(state)); };
+const save = async (cfg, state) => { state.jobs.forEach(recordDiagnostics); await atomicWrite(path.join(cfg.root, 'jobs.json'), JSON.stringify(state)); await checkpoint(); };
 async function locked(cfg, operation) {
   await mkdir(cfg.root, { recursive: true });
   let lock;
@@ -164,6 +167,12 @@ async function sourceStill(cfg, input) {
   if (manifest.version !== input.identityKitVersion) fail(409, 'Refresh the identity kit and select a matching live still.');
   const localImage = await readFile(path.join(cfg.stillRoot, `${job.id}.png`));
   if (localImage.length > 20 * 1024 * 1024 || hash(localImage) !== job.sha256) fail(409, 'The saved source still needs verification.');
+  const durable = mediaEntry(path.join(cfg.stillRoot, `${job.id}.png`));
+  if (durable) {
+    const metadata = await sharp(localImage).metadata();
+    return { id: job.id, imageUrl: durable.url, src: durable.url, sha256: job.sha256, width: metadata.width, height: metadata.height,
+      lora: { adaptationId: job.input.adaptationId, checkpoint: job.backend === 'krea' ? 1500 : 750, model: job.backend === 'krea' ? 'Krea 2 Turbo' : 'FLUX.2 Klein Base 4B', strength: job.settings?.scale, seed: job.input.seed, contribution: 'selected-still conditioning', loadedByMotionModel: false } };
+  }
   let record;
   try { record = await providerJson(cfg, job.backend === 'krea' ? `https://model-api.runcomfy.net/v1/requests/${job.providerId}/result` : `https://api.runcomfy.net/prod/v2/deployments/${job.deploymentId}/requests/${job.providerId}/result`); }
   catch { fail(409, 'The selected still provider result is currently unavailable. No motion was submitted.'); }
@@ -297,6 +306,7 @@ async function syncJob(cfg, id) {
   });
 }
 function watch(cfg, id) {
+  if (cfg.shared) return;
   const key = `${cfg.root}/${id}`;
   if (workers.has(key)) return;
   workers.add(key);
@@ -344,7 +354,7 @@ export async function handleMotion(req, res, { local = false, env = process.env 
     if (method === 'POST' && req.headers['x-content-studio'] !== '1') fail(403, 'Reviewer request verification failed.');
     if (action === 'session') {
       const input = await body(req);
-      if (env.CONTENT_STUDIO_REVIEWER_TOKEN && !equal(String(input?.token || ''), env.CONTENT_STUDIO_REVIEWER_TOKEN)) fail(403, 'Reviewer credential was not accepted.');
+      if (!isWorkspaceRequest(req) && env.CONTENT_STUDIO_REVIEWER_TOKEN && !equal(String(input?.token || ''), env.CONTENT_STUDIO_REVIEWER_TOKEN)) fail(403, 'Reviewer credential was not accepted.');
       if (!env.CONTENT_STUDIO_REVIEWER_TOKEN && input?.localReviewer !== true) fail(403, 'Local reviewer authorization is required.');
       const expiry = String(Date.now() + 8 * 3600000);
       const signature = createHmac('sha256', cfg.secret).update(expiry).digest('hex');
@@ -356,7 +366,7 @@ export async function handleMotion(req, res, { local = false, env = process.env 
       const state = await load(cfg);
       const available = cfg.enabled;
       if (cfg.apiKey) for (const job of state.jobs.filter(j => active.has(j.status) && j.providerId && Date.now() - Date.parse(j.createdAt) < pollWindow)) watch(cfg, job.id);
-      return send(res, 200, { available, temporary: false, authorized: !!authorized(req, cfg), tokenRequired: !!env.CONTENT_STUDIO_REVIEWER_TOKEN,
+      return send(res, 200, { available, temporary: false, authorized: !!authorized(req, cfg), tokenRequired: !isWorkspaceRequest(req) && !!env.CONTENT_STUDIO_REVIEWER_TOKEN,
         message: available ? 'Live animation available. Provider availability is checked on submission.' : 'Live animation is disabled or missing its local server configuration.',
         remainingJobs: null, allowanceLimited: false,
         activeJob: state.jobs.some(j => active.has(j.status)), videoAvailable: available, estimatedCostPerSecond: 0.045, resolution: '768p', maxDuration: 15,

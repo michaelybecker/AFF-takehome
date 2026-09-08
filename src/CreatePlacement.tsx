@@ -1,3 +1,4 @@
+import { saveWorkspaceValue } from './workspaceSync';
 import { useState } from 'react';
 import { Modal } from './Media';
 export type CustomPlacement = { id: string; campaignId: string; name: string; kind: 'still' | 'motion'; width: number; height: number; ratio: string; value: number };
@@ -17,7 +18,7 @@ export default function CreatePlacement({ campaignId, onCreate, onClose }: { cam
     const divisor = (a: number, b: number): number => b ? divisor(b, a % b) : a;
     const d = divisor(width, height);
     const placement = { id: 'custom-' + crypto.randomUUID(), campaignId, name: name.trim(), kind, width, height, ratio: `${width / d}:${height / d}`, value: width / height };
-    try { localStorage.setItem(key, JSON.stringify([...loadPlacements(), placement])); onCreate(placement); } catch { setError('The placement could not be saved on this device.'); }
+    try { saveWorkspaceValue(key, JSON.stringify([...loadPlacements(), placement])); onCreate(placement); } catch { setError('The placement could not be saved on this device.'); }
   }}>
     <label className="field">Placement name<input required maxLength={80} value={name} placeholder="e.g. Square social post" onChange={e => setName(e.target.value)} /></label>
     <label className="field">Media type<select value={kind} onChange={e => setKind(e.target.value as 'still' | 'motion')}><option value="still">Still / PNG</option><option value="motion">Motion / MP4</option></select></label>

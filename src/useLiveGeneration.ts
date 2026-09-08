@@ -35,6 +35,9 @@ export function useLiveGeneration<S extends LiveStatus>({ api, missionId, reques
       setStatus(health);
       if (health.authorized) {
         const data = await api<{ jobs: LiveJob[] }>(`jobs&missionId=${encodeURIComponent(missionId)}`);
+        for (let i=0;i<data.jobs.length;i++) {
+          if(isActiveJob(data.jobs[i]) && !data.jobs[i].reconciliationRequired) data.jobs[i]=await api<LiveJob>(`job&id=${encodeURIComponent(data.jobs[i].id)}`);
+        }
         if (!mounted.current) return;
         // The Sandbox is the durable project history: recover active and completed work.
         for (const job of data.jobs) if (isActiveJob(job)) visitJobs.add(job.id);
