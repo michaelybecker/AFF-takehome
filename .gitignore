@@ -5,6 +5,7 @@ dist/
 .vercel/
 *.tsbuildinfo
 .verification/
+.local-data/
 *.log
 .DS_Store
 Thumbs.db

@@ -1,0 +1,383 @@
+{
+  "version": 1,
+  "references": [
+    {
+      "id": "ref-31a09a9cde27f7618a73271a",
+      "title": "Studio hero portrait",
+      "src": "/media/stills/studio-hero-portrait.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/31a09a9cde27f7618a73271a9e51fffd8acaf6864794c2b84bbcc3cc571eb309.png",
+      "sha256": "31a09a9cde27f7618a73271a9e51fffd8acaf6864794c2b84bbcc3cc571eb309",
+      "group": "Source images",
+      "aliases": [
+        "studio-hero-portrait",
+        "60b"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-6ab449fb6ada71363d61caf4",
+      "title": "Three-point landing",
+      "src": "/media/stills/three-point-landing.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/6ab449fb6ada71363d61caf466757b52a4ce2472df00a48b18eee5339c13298d.png",
+      "sha256": "6ab449fb6ada71363d61caf466757b52a4ce2472df00a48b18eee5339c13298d",
+      "group": "Source images",
+      "aliases": [
+        "three-point-landing",
+        "61b"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-c49dbd4606ddb9112a6c9cad",
+      "title": "Helmet and chest portrait",
+      "src": "/media/stills/helmet-and-chest-portrait.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/c49dbd4606ddb9112a6c9cad4dc7dde5138a3fc6326ec4049ca88d4cbf83f3e6.png",
+      "sha256": "c49dbd4606ddb9112a6c9cad4dc7dde5138a3fc6326ec4049ca88d4cbf83f3e6",
+      "group": "Source images",
+      "aliases": [
+        "helmet-and-chest-portrait",
+        "60a"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-63eda615b17ee11a84dd8329",
+      "title": "Hangar armor portrait",
+      "src": "/media/stills/hangar-armor-portrait.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/63eda615b17ee11a84dd83291fd977008e3679690d337947e7351515495852c1.png",
+      "sha256": "63eda615b17ee11a84dd83291fd977008e3679690d337947e7351515495852c1",
+      "group": "Source images",
+      "aliases": [
+        "hangar-armor-portrait",
+        "61a"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-0c3ba29f06aa77b6882545c4",
+      "title": "Gulmira - hero stance",
+      "src": "/media/stills/gulmira-hero-stance.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/0c3ba29f06aa77b6882545c4eef90dc2f23cfc8924b6d23ec3654dfa275a5a85.png",
+      "sha256": "0c3ba29f06aa77b6882545c4eef90dc2f23cfc8924b6d23ec3654dfa275a5a85",
+      "group": "Source images",
+      "aliases": [
+        "gulmira-hero-stance",
+        "movie1"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-e332752a136dfc139f4f6eb8",
+      "title": "Gulmira - rear armor",
+      "src": "/media/stills/gulmira-rear-armor.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/e332752a136dfc139f4f6eb8ed76019fae2e014455a57d2520e7e80da2b14df6.png",
+      "sha256": "e332752a136dfc139f4f6eb8ed76019fae2e014455a57d2520e7e80da2b14df6",
+      "group": "Source images",
+      "aliases": [
+        "gulmira-rear-armor",
+        "movie2"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-3c0e0b600c8ee5a63970acbd",
+      "title": "Repulsor engagement",
+      "src": "/media/stills/repulsor-engagement.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/3c0e0b600c8ee5a63970acbdd66f0ad5a628319d12e84fc609176e68c9d9d030.png",
+      "sha256": "3c0e0b600c8ee5a63970acbdd66f0ad5a628319d12e84fc609176e68c9d9d030",
+      "group": "Source images",
+      "aliases": [
+        "repulsor-engagement",
+        "movie15"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-4daadce5aac05c0a0247d7d0",
+      "title": "Flight - lateral profile",
+      "src": "/media/stills/flight-lateral.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/4daadce5aac05c0a0247d7d09c2d8554527967ac47c0ee941d467ecede460949.png",
+      "sha256": "4daadce5aac05c0a0247d7d09c2d8554527967ac47c0ee941d467ecede460949",
+      "group": "Source images",
+      "aliases": [
+        "flight-lateral",
+        "movie12"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-f60458f0f9c3fe63bd2d672e",
+      "title": "Studio hero stance",
+      "src": "/media/derived/previews/59.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/f60458f0f9c3fe63bd2d672e974d5110b805f00915bc6778f740cf2ef0ca410e.png",
+      "sha256": "f60458f0f9c3fe63bd2d672e974d5110b805f00915bc6778f740cf2ef0ca410e",
+      "group": "Source images",
+      "aliases": [
+        "59"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-1ea987dc32941f45a571f1c8",
+      "title": "Extended-arm stance",
+      "src": "/media/derived/previews/movie3.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/1ea987dc32941f45a571f1c8d91ab83174246feef4c404d39699dd60f4bde8d6.png",
+      "sha256": "1ea987dc32941f45a571f1c8d91ab83174246feef4c404d39699dd60f4bde8d6",
+      "group": "Source images",
+      "aliases": [
+        "movie3"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-e0cbbe25af928d3657ec79d9",
+      "title": "Frontal armor study",
+      "src": "/media/derived/previews/movie4.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/e0cbbe25af928d3657ec79d931abaae12629d965037f15c91d2e43bcc390b742.png",
+      "sha256": "e0cbbe25af928d3657ec79d931abaae12629d965037f15c91d2e43bcc390b742",
+      "group": "Source images",
+      "aliases": [
+        "movie4"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-ae7eec43f8c7407714a3b439",
+      "title": "Lower-leg armor detail",
+      "src": "/media/derived/previews/movie5.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/ae7eec43f8c7407714a3b439a3992f6ad2835df3b34f8ff97d4d53aaa7e15256.png",
+      "sha256": "ae7eec43f8c7407714a3b439a3992f6ad2835df3b34f8ff97d4d53aaa7e15256",
+      "group": "Source images",
+      "aliases": [
+        "movie5"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-8f8c9d78fb40d8ce092af1f6",
+      "title": "Repulsor lift-off",
+      "src": "/media/derived/previews/movie6.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/8f8c9d78fb40d8ce092af1f62db997abe19846ef404b2bc2b689880c7fb68c39.png",
+      "sha256": "8f8c9d78fb40d8ce092af1f62db997abe19846ef404b2bc2b689880c7fb68c39",
+      "group": "Source images",
+      "aliases": [
+        "movie6"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-4ca086158fec8e50c87b3972",
+      "title": "Flight - frontal approach",
+      "src": "/media/derived/previews/movie7.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/4ca086158fec8e50c87b397258c027aed40fdf92f682448c1bd0db95a3df1654.png",
+      "sha256": "4ca086158fec8e50c87b397258c027aed40fdf92f682448c1bd0db95a3df1654",
+      "group": "Source images",
+      "aliases": [
+        "movie7"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-d40efe7d75851b125f5f4c9c",
+      "title": "Flight - low angle",
+      "src": "/media/derived/previews/movie8.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/d40efe7d75851b125f5f4c9c3c7eb69fc8374bc9904f1b326415db3c74f5b389.png",
+      "sha256": "d40efe7d75851b125f5f4c9c3c7eb69fc8374bc9904f1b326415db3c74f5b389",
+      "group": "Source images",
+      "aliases": [
+        "movie8"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-1b162032c7ad16b6854ed153",
+      "title": "Arc reactor detail",
+      "src": "/media/derived/previews/movie10.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/1b162032c7ad16b6854ed15318741c16bd6f4e7c67639174768fda08252d1bd5.png",
+      "sha256": "1b162032c7ad16b6854ed15318741c16bd6f4e7c67639174768fda08252d1bd5",
+      "group": "Source images",
+      "aliases": [
+        "movie10"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-e7376f85208e83df71b4823d",
+      "title": "Workshop helmet portrait",
+      "src": "/media/derived/previews/movie11.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/e7376f85208e83df71b4823db6e5a96a99fe90ba57667033c5f97f2eb0e7d59f.png",
+      "sha256": "e7376f85208e83df71b4823db6e5a96a99fe90ba57667033c5f97f2eb0e7d59f",
+      "group": "Source images",
+      "aliases": [
+        "movie11"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-fcf3995fb53c2adffb805505",
+      "title": "Repulsor stance",
+      "src": "/media/derived/previews/movie13.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/fcf3995fb53c2adffb805505fda9a231d2432b03fddd10cca716acc91836177d.png",
+      "sha256": "fcf3995fb53c2adffb805505fda9a231d2432b03fddd10cca716acc91836177d",
+      "group": "Source images",
+      "aliases": [
+        "movie13"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-85f7d8c14a8c007c789c8556",
+      "title": "Hip and gauntlet detail",
+      "src": "/media/derived/previews/movie14.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/85f7d8c14a8c007c789c8556f31b0e00562b7125d39fa1b937f51000371df278.png",
+      "sha256": "85f7d8c14a8c007c789c8556f31b0e00562b7125d39fa1b937f51000371df278",
+      "group": "Source images",
+      "aliases": [
+        "movie14"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-8d59ae05fb865757e0f28376",
+      "title": "Faceplate detail",
+      "src": "/media/derived/previews/movie16.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/8d59ae05fb865757e0f28376e66c70ec4e4db1a404831b3ada1feddb8c540a5a.png",
+      "sha256": "8d59ae05fb865757e0f28376e66c70ec4e4db1a404831b3ada1feddb8c540a5a",
+      "group": "Source images",
+      "aliases": [
+        "movie16"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-d201d917f3d33af8402e7f3a",
+      "title": "Night exterior portrait",
+      "src": "/media/derived/previews/movie18.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/d201d917f3d33af8402e7f3a0153d0004bf39f4bbba730730471b5de0aed20c9.png",
+      "sha256": "d201d917f3d33af8402e7f3a0153d0004bf39f4bbba730730471b5de0aed20c9",
+      "group": "Source images",
+      "aliases": [
+        "movie18"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-d6bd1c556fcccd383e765e24",
+      "title": "Production expression study",
+      "src": "/media/derived/previews/movie19.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/d6bd1c556fcccd383e765e24b72e71dea6134c50a9fd1dd708728c5787d1ad65.png",
+      "sha256": "d6bd1c556fcccd383e765e24b72e71dea6134c50a9fd1dd708728c5787d1ad65",
+      "group": "Source images",
+      "aliases": [
+        "movie19"
+      ],
+      "lora": null,
+      "hosted": true
+    },
+    {
+      "id": "ref-b6b8bb9c11a451dae2967209",
+      "title": "Window study",
+      "src": "/media/derived/samples/08-film-cool-window-lora060-seed146.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/b6b8bb9c11a451dae296720993a98a1fb5e3aaa5cac1d9a08b06d42c236101dd.png",
+      "sha256": "b6b8bb9c11a451dae296720993a98a1fb5e3aaa5cac1d9a08b06d42c236101dd",
+      "group": "Generated images",
+      "aliases": [
+        "08-film-cool-window-lora060-seed146"
+      ],
+      "lora": {
+        "adaptationId": "mark-iii-studio-identity-v0.1",
+        "checkpoint": 750,
+        "strength": 0.6,
+        "model": "black-forest-labs/FLUX.2-klein-base-4B",
+        "seed": 146,
+        "contribution": "reference-image conditioning",
+        "loadedByMotionModel": false
+      },
+      "hosted": true
+    },
+    {
+      "id": "ref-65a4e186d5efe0113b23b565",
+      "title": "Repulsor stance",
+      "src": "/media/derived/samples/08-repulsor.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/65a4e186d5efe0113b23b5656ca9d74667e9f3d381b5ba7e30be8de7027592e4.png",
+      "sha256": "65a4e186d5efe0113b23b5656ca9d74667e9f3d381b5ba7e30be8de7027592e4",
+      "group": "Generated images",
+      "aliases": [
+        "08-repulsor"
+      ],
+      "lora": {
+        "adaptationId": "mark-iii-studio-identity-v0.1",
+        "checkpoint": 750,
+        "strength": 1,
+        "model": "black-forest-labs/FLUX.2-klein-base-4B",
+        "seed": 503,
+        "contribution": "reference-image conditioning",
+        "loadedByMotionModel": false
+      },
+      "hosted": true
+    },
+    {
+      "id": "ref-f19d7deec7c92d2184234cd0",
+      "title": "Collector edition",
+      "src": "/media/derived/samples/23-collectors-icon.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/f19d7deec7c92d2184234cd0e6a351683a841e532ea235aada1cfdccd5369891.png",
+      "sha256": "f19d7deec7c92d2184234cd0e6a351683a841e532ea235aada1cfdccd5369891",
+      "group": "Generated images",
+      "aliases": [
+        "23-collectors-icon"
+      ],
+      "lora": {
+        "adaptationId": "mark-iii-studio-identity-v0.1",
+        "checkpoint": 750,
+        "strength": 0.7,
+        "model": "black-forest-labs/FLUX.2-klein-base-4B",
+        "seed": 2017,
+        "contribution": "reference-image conditioning",
+        "loadedByMotionModel": false
+      },
+      "hosted": true
+    },
+    {
+      "id": "ref-36b7324709e9af4968350fdf",
+      "title": "The icon",
+      "src": "/media/derived/samples/18-helmet-shadow.webp",
+      "imageUrl": "https://yq4mdb2tlq6tdjvq.public.blob.vercel-storage.com/firefly-demo/references/36b7324709e9af4968350fdf364b89c121eb36134027c0093167cabd017c130c.png",
+      "sha256": "36b7324709e9af4968350fdf364b89c121eb36134027c0093167cabd017c130c",
+      "group": "Generated images",
+      "aliases": [
+        "18-helmet-shadow"
+      ],
+      "lora": {
+        "adaptationId": "mark-iii-studio-identity-v0.1",
+        "checkpoint": 750,
+        "strength": 1,
+        "model": "black-forest-labs/FLUX.2-klein-base-4B",
+        "seed": 1601,
+        "contribution": "reference-image conditioning",
+        "loadedByMotionModel": false
+      },
+      "hosted": true
+    }
+  ]
+}

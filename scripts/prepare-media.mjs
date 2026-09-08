@@ -3,11 +3,20 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import sharp from 'sharp';
+import { prepareStills } from './prepare-stills.mjs';
+import { prepareDerived } from './prepare-derived.mjs';
 
 const app = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const project = path.dirname(app);
 const kit = path.join(project, 'Generative_Identity_Kit');
 const target = path.join(app, 'public/media');
+let campaignMasters = [];
+try {
+  const previous = JSON.parse(await fs.readFile(path.join(target, 'manifest.json'), 'utf8'));
+  campaignMasters = previous.campaignMasters || [];
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
 for (const dir of ['brand', 'model', 'video', 'posters', 'canon', 'passes/beauty', 'passes/matte', 'passes/depth', 'passes/normals']) {
   await fs.mkdir(path.join(target, dir), { recursive: true });
 }
@@ -51,5 +60,7 @@ for (const filename of await fs.readdir(path.join(kit, 'ConceptArt'))) {
   await sharp(input).resize({ width: 1200, height: 1200, fit: 'inside', withoutEnlargement: true }).webp({ quality: 88 }).toFile(path.join(target, 'canon', id + '.webp'));
   canon.push({ id, src: '/media/canon/' + id + '.webp', title: filename.includes('mk42') ? 'Mark XLII design reference' : 'Armor design study', variant: filename.includes('mk42') ? 'Alternate armor' : 'Design reference', original: filename });
 }
-await fs.writeFile(path.join(target, 'manifest.json'), JSON.stringify({ version: '0.2.0', clips, canon, passes: ['beauty', 'matte', 'depth', 'normals'], frames: 48 }, null, 2));
+const stills = await prepareStills(target);
+const derived = await prepareDerived(target);
+await fs.writeFile(path.join(target, 'manifest.json'), JSON.stringify({ version: '0.2.0', clips, stills, canon, derived, campaignMasters, passes: ['beauty', 'matte', 'depth', 'normals'], frames: 48 }, null, 2));
 console.log(`Prepared ${clips.length} clips, ${canon.length} unique concept images, 192 pass images and source GLB.`);
