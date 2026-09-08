@@ -14,16 +14,16 @@ export const cloudContext = () => context.getStore();
 export const cloudEnabled = env => !!env.BLOB_READ_WRITE_TOKEN && env.CONTENT_STUDIO_BLOB_SYNC !== 'false';
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 const prefix = env => env.CONTENT_STUDIO_BLOB_PREFIX || 'firefly-demo/workspace-v1';
-const key = env => createHash('sha256').update('gik-state-v1:' + (env.CONTENT_STUDIO_STATE_SECRET || env.BLOB_READ_WRITE_TOKEN)).digest();
+const key = env => createHash('sha256').update('gik-state-v1:' + (env.CONTENT_STUDIO_STATE_SECRET || env.BLOB_READ_WRITE_TOKEN?.trim())).digest();
 const name = env => `${prefix(env)}/state.bin`;
 function seal(data, env) { const iv = randomBytes(12), c = createCipheriv('aes-256-gcm', key(env), iv); const b = Buffer.concat([c.update(JSON.stringify(data)), c.final()]); return Buffer.concat([iv, c.getAuthTag(), b]); }
 function unseal(bytes, env) { const d = createDecipheriv('aes-256-gcm', key(env), bytes.subarray(0,12)); d.setAuthTag(bytes.subarray(12,28)); return JSON.parse(Buffer.concat([d.update(bytes.subarray(28)), d.final()]).toString()); }
-const opts = env => ({token:env.BLOB_READ_WRITE_TOKEN,access:'public',addRandomSuffix:false,cacheControlMaxAge:60});
+const opts = env => ({token:env.BLOB_READ_WRITE_TOKEN?.trim(),access:'public',addRandomSuffix:false,cacheControlMaxAge:60});
 // Public Blob caches mutable URLs. Read the authoritative ETag through HEAD,
 // then fetch the immutable encrypted version whose bytes produced that ETag.
 export async function readSnapshot(env) {
   try {
-    const metadata = await head(name(env), {token:env.BLOB_READ_WRITE_TOKEN});
+    const metadata = await head(name(env), {token:env.BLOB_READ_WRITE_TOKEN?.trim()});
     const hash = metadata.etag.replaceAll('"', '');
     const version = `${prefix(env)}/states/${hash}.bin`;
     let result = await get(version, opts(env));
