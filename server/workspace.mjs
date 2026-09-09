@@ -46,6 +46,7 @@ export async function runWorkspace(req,res,handler,{env=process.env,local=false,
       const id=url.searchParams.get('id');
       if(['GET','HEAD'].includes(req.method)&&id&&/^[a-zA-Z0-9-]{1,200}$/.test(id)){
         const record=ctx.value.records[`deliveries/${id}.json`];
+        if(service==='deliveries'&&action==='file'&&record?.deletedAt)return json(res,404,{message:'Prepared format not found.'});
         const file=service==='stills'&&action==='image'?`stills/${id}.png`:service==='motion'&&action==='video'?`motion/${id}.mp4`:service==='deliveries'&&action==='file'&&record?`deliveries/${id}${url.searchParams.get('format')==='psd'?'.psd':record.kind==='motion'?'.mp4':'.png'}`:null;
         const media=file&&ctx.value.files[file];if(media){res.writeHead(307,{Location:media.url+(url.searchParams.has('download')?'?download=1':''),'Cache-Control':'no-store'});return res.end();}
       }

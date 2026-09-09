@@ -94,11 +94,11 @@ export async function handleDeliveries(req, res, { env = {} } = {}) {
     if (req.method === 'GET' && action === 'list') {
       const { readdir } = await import('node:fs/promises');
       const records = await Promise.all((await readdir(root)).filter(f => f.endsWith('.json')).map(f => read(path.join(root, f))));
-      return json(res, 200, records.filter(r => r.campaignId === url.searchParams.get('campaignId')).sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+      return json(res, 200, records.filter(r => !r.deletedAt && r.campaignId === url.searchParams.get('campaignId')).sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
     }
     if (req.method === 'GET' && action === 'file') {
       const id = url.searchParams.get('id'); if (!validId(id)) return json(res, 400, { message: 'Invalid output.' });
-      const record = await read(path.join(root, id + '.json')); if (!record) return json(res, 404, { message: 'Output not found.' });
+      const record = await read(path.join(root, id + '.json')); if (!record || record.deletedAt) return json(res, 404, { message: 'Output not found.' });
       const psd = url.searchParams.get('format') === 'psd';
       if (psd && !record.editable) return json(res, 404, { message: 'Prepare this format again to create an editable PSD.' });
       const ext = psd ? '.psd' : record.kind === 'still' ? '.png' : '.mp4';
@@ -120,9 +120,22 @@ export async function handleDeliveries(req, res, { env = {} } = {}) {
     if (req.method !== 'POST') return json(res, 405, { message: 'Method not supported.' });
     let body = ''; if (req.body === undefined) for await (const chunk of req) { body += chunk; if (body.length > 30000) return json(res, 413, { message: 'Layout too large.' }); }
     const input = req.body !== undefined ? req.body : JSON.parse(body);
+    if (action === 'delete') {
+      if (!validId(input.id) || !validId(input.campaignId)) return json(res, 400, { message: 'Invalid prepared format.' });
+      const filename = path.join(root, input.id + '.json');
+      const record = await read(filename);
+      if (!record || record.campaignId !== input.campaignId) return json(res, 404, { message: 'Prepared format not found.' });
+      if (!record.deletedAt) {
+        record.deletedAt = new Date().toISOString();
+        await writeFile(filename + '.tmp', JSON.stringify(record));
+        await rename(filename + '.tmp', filename);
+        await checkpoint();
+      }
+      return json(res, 200, { deleted: input.id });
+    }
     if (input.layout) input.layout.graphics = false; input.copy = { headline: '', supporting: '', cta: '' };
     if (!validId(input.id) || !validId(input.campaignId) || !validId(input.source) || !format(input) || !['contain','cover'].includes(input.layout?.fit) || ![input.layout.focalX,input.layout.focalY].every(n => Number.isFinite(n) && n >= 0 && n <= 100) || typeof input.layout.graphics !== 'boolean' || !['headline','supporting','cta'].every(k => typeof input.copy?.[k] === 'string' && input.copy[k].length <= 100)) return json(res, 400, { message: 'Choose a master and complete the layout.' });
-    const prior = await read(path.join(root, input.id + '.json')); if (prior) return json(res, 200, prior);
+    const prior = await read(path.join(root, input.id + '.json')); if (prior?.deletedAt) return json(res, 410, { message: 'This prepared format was deleted. Prepare a new version.' }); if (prior) return json(res, 200, prior);
     if (rendering) return json(res, 409, { message: 'An output is rendering. Try again when it finishes.' });
     rendering = true;
     try { return json(res, 200, await render(input, env)); } finally { rendering = false; }

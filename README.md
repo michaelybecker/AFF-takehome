@@ -137,3 +137,5 @@ Optional settings: `CONTENT_STUDIO_BLOB_PREFIX` selects a separate workspace; `C
 About → Technical inspector checks RunComfy configuration/connection; assistant Context and connection reports its own status. A successful lookup is not a successful generation. Cached public media can run without provider keys.
 
 Repository is rooted in webapp. Do not stage/commit without explicit approval. Existing ignored/private paths remain private. Verify builds and actual UI/media behavior; do not build prototype unit/regression suites. Documentation changes are not evidence that a pending check passed.
+
+Prepared-format cards include **Delete format**. Removal persists in the shared record (`deletedAt`), hides it from history and disables its app export URL. Source masters and retained Blob media/provenance are not erased. Repeating a delete is safe; retrying the original preparation ID does not restore a deleted version.
