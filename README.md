@@ -1,8 +1,12 @@
-# Generative Pipeline — local application
+# Generative Pipeline
 
 Updated September 8, 2026. Marvel Studios / Powered by Firefly Foundry. Hypothetical Disney interview prototype; this folder is the application boundary. Source footage, EXRs, training archives and plans remain in the parent workspace.
 
 This README covers application setup, workflow, APIs and storage. See [build notes](BUILD_NOTES.md) for implementation evidence and [assistant instructions](server/assistant-skills.md) for the runtime communication contract.
+
+## Live demo
+
+The demo is live and operational at [www.michaelbecker-foundry-takeho.me](https://www.michaelbecker-foundry-takeho.me/). Open it directly to explore the hosted workflow; no local setup or personal API keys are needed for the hosted demo.
 
 ## Run locally
 
@@ -21,6 +25,8 @@ npm run dev
 ```
 
 The checked-in browser media is sufficient for browsing the demo without provider keys. Do not run media preparation for a normal clone: those optional scripts require the original source workspace. Private jobs and project state are not included in Git. When Blob sync is configured, local and hosted sessions share the migrated workspace.
+
+To run live services locally, supply your own API keys: `OPENAI_API_KEY` for the assistant and `RUNCOMFY_API_KEY` for still and motion generation. Building the frontend and browsing bundled media do not require provider keys. If using Blob storage, supply your own `BLOB_READ_WRITE_TOKEN` and initialize your own workspace; the hosted demo credentials and private data are not included.
 
 To enable live services, copy `.env.example` to `.env.local` (PowerShell: `Copy-Item .env.example .env.local`; macOS/Linux: `cp .env.example .env.local`), fill in the relevant server credentials and restart Vite. Generation also depends on access to the configured model/checkpoint and hosted references; credentials alone do not recreate the original training environment. Do not overwrite an existing `.env.local`.
 
