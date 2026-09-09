@@ -82,7 +82,7 @@ export default function Activate({ mode, manifest }: { mode: Mode; manifest: Man
     setBusy(true);
     setNotice('Preparing format…');
     try {
-      const response = await fetch('/api/deliveries', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(request()), signal: AbortSignal.timeout(200000) });
+      const response = await fetch('/api/deliveries', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Content-Studio': '1' }, body: JSON.stringify(request()), signal: AbortSignal.timeout(200000) });
       const result = await response.json();
       if (!response.ok) throw Error(result.message || 'Rendering failed.');
       setOutputs(previous => [result, ...previous.filter(output => output.id !== result.id)]);
