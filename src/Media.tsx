@@ -38,7 +38,7 @@ export function Modal({ title, subtitle, children, onClose, wide = false, naviga
     return () => { document.body.style.overflow = previousOverflow; focused?.focus(); };
   }, []);
   return <dialog ref={dialog} aria-label={title} className={`modal ${wide ? 'wide' : ''}`} onCancel={e => { e.preventDefault(); onClose(); }} onClick={e => { if (e.target === dialog.current) { const r = dialog.current!.getBoundingClientRect(); if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) onClose(); } }}>
-    <header className="modal-heading"><div><span className="eyebrow">MARVEL STUDIOS / GENERATIVE IDENTITY KIT</span><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div><IconButton label="Close viewer" onClick={onClose}><X /></IconButton></header>
+    <header className="modal-heading"><div><span className="eyebrow">MARVEL STUDIOS / GENERATIVE PIPELINE</span><h2>{title}</h2>{subtitle && <p>{subtitle}</p>}</div><IconButton label="Close viewer" onClick={onClose}><X /></IconButton></header>
     <GalleryContext.Provider value={navigation}>{children}</GalleryContext.Provider>
   </dialog>;
 }

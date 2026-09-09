@@ -1,4 +1,4 @@
-# Generative Identity Kit — local application
+# Generative Pipeline — local application
 
 Updated September 8, 2026. Marvel Studios / Powered by Firefly Foundry. Hypothetical Disney interview prototype; this folder is the application boundary. Source footage, EXRs, training archives and plans remain in the parent workspace.
 
@@ -42,11 +42,11 @@ Historical direct-Comfy configuration exists for recovery, not new Krea submissi
 
 ## Product routes and persistence
 
-IDENTITY / CREATE / ANIMATE / ADAPT are peer header tabs. Hash routes are #/identity and #/activate/create, #/activate/animate, #/activate/adapt; ACTIVATE is not a visible parent. Sidebars link to contextual sections, not duplicated workspace tabs. Michael Becker's account panel is a Firefly-inspired mock signed-in view, not hosted authentication.
+IDENTITY / CREATE / ANIMATE / DELIVER are peer header tabs. Hash routes are #/identity and #/activate/create, #/activate/animate, #/activate/deliver; ACTIVATE is not a visible parent. Sidebars link to contextual sections, not duplicated workspace tabs. Michael Becker's account panel is a Firefly-inspired mock signed-in view, not hosted authentication.
 
-Project briefs and settings sync to Blob and retain a browser cache in `content-studio-missions-v1`. Still master, motion master and animationSourceId persist. Custom placements use `gik-custom-placements-v1`. Assistant conversation/evidence is session state; it is not durable chat history or access to Codex conversations.
+Master/source choices, mode and framing are session-only and reset on reload. Explicit Save brief and project create/edit/delete operations are device-local. Format preset edits/removals are session-only. Assistant conversation/evidence is session state.
 
-Sandbox combines prepared candidates with completed jobs recovered from the shared durable history. Removal uses server tombstones in `.local-data/explorations.json`, reconciled with browser state. It survives reload; never clear that ledger to reset a gallery. Removal keeps private generation provenance and shared identity media; removal hides the item without deleting shared media or provenance. Both still/motion galleries allow drag to master and assistant, card actions and modal handoffs. Galleries/pickers paginate after eight; viewer arrows stay within the full category. Page controls do not explicitly scroll.
+Sandbox combines prepared candidates with completed jobs recovered from the shared durable history. Removal uses server tombstones in `.local-data/explorations.json`, reconciled with browser state. It survives reload; never clear that ledger to reset a gallery. Removal keeps private generation provenance and shared identity media; removal hides the item without deleting shared media or provenance. Both still/motion galleries allow drag to master and assistant, card actions and modal handoffs. Galleries/pickers paginate after eight (nine for Sample results); viewer arrows stay within the full category. Page controls do not explicitly scroll.
 
 ## Generation and source lineage
 
@@ -84,11 +84,11 @@ Responses API calls use store:false, strict schemas, tool_choice:auto, parallel_
 | navigate | identity/create/animate/adapt |
 | select_master | Same-project masterId and matching still/motion kind |
 
-Legacy mission identifiers remain internal. update_brief retains old copy/graphics fields for schema compatibility; they do not enable ADAPT typography. Its placement enum remains A01–A04; custom placements are UI-only. Check `assistantTools` for exact field constraints instead of inventing capabilities.
+Legacy mission identifiers remain internal. update_brief retains old copy/graphics fields for schema compatibility; they do not enable DELIVER typography. Its placement enum remains A01–A04; custom placements are UI-only. Check `assistantTools` for exact field constraints instead of inventing capabilities.
 
-## ADAPT: prepare one format, then export
+## DELIVER: prepare applicable formats, then export individually
 
-`server/deliveries.mjs`, `src/Activate.tsx`, `src/DeliveryOutputs.tsx` and `src/DeliveryPreview.tsx` implement format preparation. No provider inference is called. Choose one master/preset or create one custom placement, frame it, click Prepare format, review, then export. Saved history is scoped to the selected placement.
+`server/deliveries.mjs`, `src/Activate.tsx`, `src/DeliveryOutputs.tsx` and `src/DeliveryPreview.tsx` implement format preparation. No provider inference is called. Choose one source artwork, frame it, then click Prepare formats to prepare every applicable preset (including custom placements) sequentially. Motion sources supply motion formats and their first decoded frame supplies still PSDs. Still sources supply still formats; motion presets are N/A. Review and export one output at a time. Saved history is scoped to both the selected source and placement. Entering DELIVER from CREATE/ANIMATE carries that workspace’s selected master.
 
 Default dimensions: A01 1600×2400 still; A02 1600×2000 still; A03 1080×1920 motion; A04 1920×1080 motion. Custom dimensions 64–4096 per axis, even for motion. These are demo canvases, not delivery compliance.
 
@@ -96,9 +96,9 @@ Stills use Sharp for a transparent PNG preview and ag-psd for a PSD containing a
 
 Motion uses ffmpeg scale/crop/pad and H.264/AAC MP4 with available source audio. It is flattened media for downstream editing, not a native Premiere/After Effects project. Existing flattened PNG/MP4 outputs remain intact and labeled.
 
-POST /api/deliveries validates workspace access, selected source, layout and dimensions, prepares one version and returns metadata. GET with action=list and campaignId lists saved records; action=file&id=... serves preview/media; format=psd serves the editable file; download=1 uses attachment disposition. Source files resolve from trusted project job/asset records, not arbitrary client paths. Work is serialized and request IDs are idempotent. PNG/MP4/PSD and JSON use Blob in shared mode, or `.local-data/deliveries` in local mode; metadata is published after preparation succeeds. No bulk export or native video project format is implemented.
+POST /api/deliveries validates workspace access, selected source, layout and dimensions, prepares one version and returns metadata. GET with action=list and campaignId lists saved records; action=file&id=... serves preview/media; format=psd serves the editable file; download=1 uses attachment disposition. Source files resolve from trusted project job/asset records, not arbitrary client paths. Work is serialized and request IDs are idempotent. PNG/MP4/PSD and JSON use Blob in shared mode, or `.local-data/deliveries` in local mode; metadata is published after preparation succeeds. Preparation batches applicable formats; export remains individual. No bulk export or native video project format is implemented.
 
-Prepare format saves and opens its viewer without downloading. Export to computer downloads that saved PSD/MP4. Export to Creative Cloud opens an explicit disabled destination mockup, not an upload. [Adobe's cloud-export documentation](https://helpx.adobe.com/photoshop/desktop/save-and-export/export-files-to-different-formats/export-to-cloud.html) informed the proposed destination; no SDK integration is claimed.
+Prepare formats saves each completed output and shows batch progress without downloading. Select a preset to review its saved outputs. Export to computer downloads that saved PSD/MP4. Export to Creative Cloud opens an explicit disabled destination mockup, not an upload. [Adobe's cloud-export documentation](https://helpx.adobe.com/photoshop/desktop/save-and-export/export-files-to-different-formats/export-to-cloud.html) informed the proposed destination; no SDK integration is claimed.
 
 PSD structure, source-byte equality, transparency and download have been verified. Direct opening/editing in Photoshop remains outstanding. Review source sharpness and actual delivery requirements separately.
 
@@ -122,9 +122,9 @@ npm run migrate:workspace
 
 The command backs up local ledgers/exports, uploads media, and publishes encrypted state. It refuses to replace an existing workspace. Rerunning verifies the existing store. The local originals and migration backup remain untouched. Existing completed/failed jobs, exports, Sandbox entries and removal tombstones are retained. For a fresh workspace with no local history, the command initializes empty ledgers.
 
-Open your original localhost browser once before switching to the hosted site: its project selections and custom placements are imported if shared browser settings are empty. The browser retains `gik-pre-cloud-backup` before adopting cloud settings. An existing shared project is never automatically overwritten by another browser's older settings. Legacy browser-only data that conflicts with existing shared settings stays in that backup for manual reconciliation.
+Existing shared project definitions are read for compatibility only when device-local settings are absent. The browser no longer uploads workspace settings or selections to Blob.
 
-After import, application changes save automatically: project briefs, master/source choices, placements, Sandbox curation, job history and prepared exports. Browser settings debounce for 600 ms and retry transient errors. Wait for the saved status before closing. Conflicting edits remain on the device and ask you to reload; they do not silently overwrite another session. Gallery/job data refresh on access/polling. Assistant conversation itself remains session-only.
+Generated assets, job history, prepared outputs and Sandbox curation remain durable through their server endpoints. Shot selection, mode changes and framing do not write to Blob. Gallery/job data refresh on access/polling.
 
 This is event-driven synchronization of app operations, not a directory watcher. Editing local JSON with an external script does **not** publish it. Code and bundled media still deploy through Git push. Use the hosted app for a single operational workspace, or localhost for development against the same state.
 
@@ -139,3 +139,7 @@ About → Technical inspector checks RunComfy configuration/connection; assistan
 Repository is rooted in webapp. Do not stage/commit without explicit approval. Existing ignored/private paths remain private. Verify builds and actual UI/media behavior; do not build prototype unit/regression suites. Documentation changes are not evidence that a pending check passed.
 
 Prepared-format cards include **Delete format**. Removal persists in the shared record (`deletedAt`), hides it from history and disables its app export URL. Source masters and retained Blob media/provenance are not erased. Repeating a delete is safe; retrying the original preparation ID does not restore a deleted version.
+
+
+### Session-only workspace controls
+Shot/master selection, mode changes and framing stay in memory and reset on page refresh. CREATE and ANIMATE open with no selected master; the motion master is labeled Key shot. Save brief and custom placement definitions are device-local. Browser settings never POST to Blob. Existing generated Sandbox media, generation recovery records, prepared outputs and curation/deletion remain shared and durable.

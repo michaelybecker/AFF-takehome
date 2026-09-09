@@ -35,6 +35,11 @@ export function useLiveGeneration<S extends LiveStatus>({ api, missionId, reques
       setStatus(health);
       if (health.authorized) {
         const data = await api<{ jobs: LiveJob[] }>(`jobs&missionId=${encodeURIComponent(missionId)}`);
+        // Publish committed history before trying to advance an active job.
+        // A failed refresh must not leave an older queued state on screen.
+        if (!mounted.current) return;
+        setJobs(data.jobs);
+        current.current.onResults(data.jobs.flatMap(job => job.result ? [job.result] : []));
         for (let i=0;i<data.jobs.length;i++) {
           if(isActiveJob(data.jobs[i]) && !data.jobs[i].reconciliationRequired) data.jobs[i]=await api<LiveJob>(`job&id=${encodeURIComponent(data.jobs[i].id)}`);
         }

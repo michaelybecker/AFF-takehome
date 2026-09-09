@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import type { CampaignMaster } from './data';
-import { changeSandboxAsset } from './assistant-bridge';
+import { changeSandboxAsset, useSandboxRemovalError } from './assistant-bridge';
 
 export default function SandboxAction({ asset }: { asset: CampaignMaster }) {
-  const [error, setError] = useState('');
+  const error = useSandboxRemovalError(asset.id);
   const [busy, setBusy] = useState(false);
 
   async function remove() {
     if (busy || !confirm(`Remove “${asset.title}” from the Sandbox? The private generation record will remain available for provenance.`)) return;
-    setBusy(true); setError('');
+    setBusy(true);
     try { await changeSandboxAsset(asset, 'delete'); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : 'Sandbox update failed.'); }
+    catch { /* Shared error survives the card unmounting and being restored. */ }
     finally { setBusy(false); }
   }
 

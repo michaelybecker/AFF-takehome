@@ -29,7 +29,11 @@ export async function runWorkspace(req,res,handler,{env=process.env,local=false,
     if(!['GET','HEAD'].includes(req.method)&&(req.headers['x-content-studio']!=='1'||!req.headers['content-type']?.startsWith('application/json')))return json(res,403,{message:'Application request required.'});
     // Read-only operations do not take a writer lease. Active jobs progress through job polling.
     const readonly=['GET','HEAD'].includes(req.method)&&action!=='job';
+    const response = new Capture();
     await withWorkspace(env,async()=>{
+      // Never end the real HTTP response before the writer lease is released.
+      // Serverless hosts may suspend execution immediately after res.end().
+      const res = response;
       const ctx=cloudContext();
       ctx.env={...env,CONTENT_STUDIO_PUBLIC_ORIGIN:local?`http://${req.headers.host}`:`https://${req.headers.host}`};
       if(service==='workspace'){
@@ -61,10 +65,23 @@ export async function runWorkspace(req,res,handler,{env=process.env,local=false,
       await handler(req,capture,{env:scoped,local:true});await capture.done;
       if(!readonly)await checkpoint();
       res.writeHead(capture.statusCode,capture.headers);res.end(Buffer.concat(capture.chunks));
-    },{readonly});
+    },{readonly,waitMs:readonly || action==='job' ? 0 : 12000});
+    await response.done;
+    res.writeHead(response.statusCode,response.headers);
+    res.end(Buffer.concat(response.chunks));
   }catch(error){
+    // Another writer can advance this job. Return its committed status without
+    // acquiring a second lease or making another provider request.
+    const pendingUrl = new URL(req.url, 'http://localhost');
+    if(error.code === 'WORKSPACE_BUSY' && req.method === 'GET' && ['stills','motion'].includes(service) && pendingUrl.searchParams.get('action') === 'job') {
+      const originalUrl = req.url;
+      pendingUrl.searchParams.set('action', 'job-snapshot');
+      req.url = pendingUrl.pathname + pendingUrl.search;
+      try { return await runWorkspace(req,res,handler,{env,local,service}); }
+      finally { req.url = originalUrl; }
+    }
     const message=error.status?error.message:error.message?.includes('authenticate data')?'The workspace encryption key differs between local and production configuration.':error.name?.includes('Access')||error.message?.includes('token')?'The production Blob credential could not access the shared workspace.':error.code==='ENOENT'?'A required workspace file is missing from the deployment.':'Shared workspace could not finish saving. Retry without creating a new generation request.';
     console.error('Workspace request failed', {name:error.name,code:error.code,message});
-    if(!res.headersSent)json(res,error.status||503,{message,retryable:true});
+    if(!res.headersSent)json(res,error.status||503,{message,code:error.code,retryable:true});
   }
 }

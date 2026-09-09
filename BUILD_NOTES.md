@@ -12,11 +12,11 @@ Current summary â€” September 8, 2026. See [runtime/setup](README.md) for applic
 
 ## Current implementation evidence
 
-- React/TypeScript/Vite app with identity/media inspection and four peer IDENTITY/CREATE/ANIMATE/ADAPT destinations. Header/route changes were built and browser-inspected.
-- Generative Identity Kit naming, mock Firefly-style Michael Becker account, persistent projects/Sandbox/master choices, durable curation, drag-to-master/assistant, modal actions, category navigation and eight-item pagination are implemented. Final integrated rehearsal remains a separate check.
+- React/TypeScript/Vite app with identity/media inspection and four peer IDENTITY/CREATE/ANIMATE/DELIVER destinations. Header/route changes were built and browser-inspected.
+- Generative Pipeline naming, mock Firefly-style Michael Becker account, device-local projects, persistent Sandbox and session-only master choices, durable curation, drag-to-master/assistant, modal actions, category navigation and eight-item pagination are implemented. Final integrated rehearsal remains a separate check.
 - Real Krea still and H3 Max image-to-video services, visual review and assistant proposals/receipts exist locally. Review is user-led; explicitly requested generation executes directly, draft-only requests remain editable. The assistant is a separate OpenAI-backed app feature, not Codex/Adobe's assistant.
 - Stratosphere, After the landing and Harajuku landing were added to both sample catalogs. Existing Sandbox removals were preserved. Nine breadth runs completed; the tenth was stopped/excluded, not a successful tenth output.
-- ADAPT now prepares a single format. Existing/custom presets remain; output history is placement-scoped. Typography and anniversary graphics were removed. Preparation opens a result viewer; exports are separate.
+- DELIVER now prepares a single format. Existing/custom presets remain; output history is placement-scoped. Typography and anniversary graphics were removed. Preparation opens a result viewer; exports are separate.
 
 ## PSD and export verification
 
@@ -36,7 +36,7 @@ The following is preserved as evidence of that build, not current instructions o
 
 Date: 2026-09-07.
 
-Historical implementation/verification record. The later anniversary mission changes planned scope, not what these checks demonstrated. The initial activation skeleton is not yet the planned CREATE -> ADAPT campaign journey.
+Historical implementation/verification record. The later anniversary mission changes planned scope, not what these checks demonstrated. The initial activation skeleton is not yet the planned CREATE -> DELIVER campaign journey.
 
 ## Implemented
 
@@ -44,7 +44,7 @@ The app lives in webapp, separately from original source media and planning. Vit
 
 Asset preparation copied 17 web clips, extracted posters, converted 144 render images to WebP, extracted 48 mattes from verified alpha, and removed one byte-identical duplicate from the concept collection. Eight unique concepts are shown. Original files were not changed.
 
-All five Identity sections are represented. The existing footage and concepts include alternate armor designs, so their source-review status remains pending. Derived Identity explicitly awaits R&D. REUSE / CREATE / ADAPT preserve the agreed labels and accept campaign briefs. Requests use a prepared provider contract and return awaiting-output until genuine R&D results are registered.
+All five Identity sections are represented. The existing footage and concepts include alternate armor designs, so their source-review status remains pending. Derived Identity explicitly awaits R&D. REUSE / CREATE / DELIVER preserve the agreed labels and accept campaign briefs. Requests use a prepared provider contract and return awaiting-output until genuine R&D results are registered.
 
 ## Verification
 
@@ -56,14 +56,14 @@ All five Identity sections are represented. The existing footage and concepts in
 - Paused turntable pass switching retained frame 17 across Beauty and Depth. All four pass views shared the current frame.
 - Search for walking returned two matching production clips.
 - Campaign selection updated the brief fields. Preparing a brief produced an awaiting-output record and saved its draft locally.
-- CREATE opened its identity-grounding view. ADAPT saved a 9:16 selection, which remained selected after reload.
+- CREATE opened its identity-grounding view. DELIVER saved a 9:16 selection, which remained selected after reload.
 - Browser error log was empty in the inspected session.
 
 Temporary visual captures are stored in .verification, which is ignored. These are interaction/rendering checks, not a unit or regression test suite.
 
 ## Remaining Work
 
-The revised mission requires real image-LoRA training/use/comparison, curated Mark III references, selected anniversary still and new-motion masters, and result registration. Planned R&D order is RunComfy image-LoRA training -> reviewed still generation -> H3 Max on RunComfy using the selected still -> reviewed motion -> ADAPT. H3 Max receives pixels, not the FLUX adapter; Wan/LTX remain fallback/challenger options. Migrate the app to CREATE-first anniversary briefing and ADAPT master-to-placement previews/exports. The gaps checklist owns remaining acceptance work. REUSE/ID-V2V is experimental if time, no longer required; a direct video LoRA is a separate follow-on experiment. No H3 Max run or live integration is claimed by this documentation update. The current UI does not invent results or claim live inference.
+The revised mission requires real image-LoRA training/use/comparison, curated Mark III references, selected anniversary still and new-motion masters, and result registration. Planned R&D order is RunComfy image-LoRA training -> reviewed still generation -> H3 Max on RunComfy using the selected still -> reviewed motion -> DELIVER. H3 Max receives pixels, not the FLUX adapter; Wan/LTX remain fallback/challenger options. Migrate the app to CREATE-first anniversary briefing and DELIVER master-to-placement previews/exports. The gaps checklist owns remaining acceptance work. REUSE/ID-V2V is experimental if time, no longer required; a direct video LoRA is a separate follow-on experiment. No H3 Max run or live integration is claimed by this documentation update. The current UI does not invent results or claim live inference.
 
 Later interaction refinement (same date): single-click media expansion superseded the initially tested double-click entry, and canonical tiles gained independent hover playback while expanded pass switching retained frame synchronization. Labels now read Canonical Identity Kit and Authoritative asset representation; the workspace uses the Marvel logo in a square tile. Earlier verification bullets are retained as historical observations rather than rewritten as new tests.
 
@@ -73,12 +73,26 @@ Public deployment, Git staging, and commits have not been performed. The local s
 
 `server/workspace-store.mjs` adapts the existing file-based services to an encrypted Blob snapshot with immutable media and conditional writer leases. `server/workspace.mjs` supplies the hosted access cookie, same-origin checks, shared assistant request spacing, media redirects and request-scoped temporary files. Both Vite and the Vercel API adapters use this path.
 
-`src/workspaceSync.ts` synchronizes project and placement settings with revision checks; `WorkspaceGate` hydrates settings before loading the application. Sandbox tombstones, generation reservations and ADAPT outputs persist through their server handlers. Provider polling resumes existing jobs; no inference is needed to migrate records.
+`src/workspaceSync.ts` reads legacy shared definitions without uploading browser settings; `WorkspaceGate` hydrates settings before loading the application. Sandbox tombstones, generation reservations and DELIVER outputs persist through their server handlers. Provider polling resumes existing jobs; no inference is needed to migrate records.
 
 Migration verified 61 media hashes, 17 original JSON records and 21 removal tombstones against the local originals. Browser project settings were imported separately. Focused checks cover competing writers, failed-operation rollback, stale browser revisions, saved job lists and Blob media redirects. TypeScript/Vite build passes. Hosted provider execution and direct Photoshop editing require separate validation; no new inference is claimed by these checks.
 
-Vercel deployed commit `93c93c7` successfully. Production `/api/workspace` correctly returns 401 before sign-in. Its existing write-only `CONTENT_STUDIO_REVIEWER_TOKEN` differs from the local derived code; authenticated production recovery is pending sign-in with that configured value. The local shared adapter and a simulated hosted request verified login/session and cross-origin rejection. An isolated format preparation from migrated sources produced a 1600×2000 PSD with its original embedded; it did not add a test output to the shared gallery.
+Vercel deployed commit `93c93c7` successfully. Production `/api/workspace` correctly returns 401 before sign-in. Its existing write-only `CONTENT_STUDIO_REVIEWER_TOKEN` differs from the local derived code; authenticated production recovery is pending sign-in with that configured value. The local shared adapter and a simulated hosted request verified login/session and cross-origin rejection. An isolated format preparation from migrated sources produced a 1600Ã—2000 PSD with its original embedded; it did not add a test output to the shared gallery.
 
 ## Temporary open demo access
 
-At the owner’s explicit request, all workspace services now operate without an access code or session cookie. The opening screen only hydrates shared state; it has no sign-in form. Existing reviewer-token environment values do not gate the shared adapter. Same-origin validation, request schemas, job recovery and conditional writes remain. This supersedes the deployment sign-in requirement above.
+At the ownerâ€™s explicit request, all workspace services now operate without an access code or session cookie. The opening screen only hydrates shared state; it has no sign-in form. Existing reviewer-token environment values do not gate the shared adapter. Same-origin validation, request schemas, job recovery and conditional writes remain. This supersedes the deployment sign-in requirement above.
+
+## Pending local fix: writer cleanup before response
+
+The shared adapter previously ended the actual HTTP response inside the lease scope. A serverless host could suspend cleanup after the response, leaving the 330-second writer lease behind. Responses are now buffered until lease release and temporary-file cleanup finish. Lease release retries uncertain writes using freshly checked ownership and committed state. This change is local only pending the next approved release.
+
+## Pending local DELIVER source and batch preparation
+
+Prepare formats now processes all compatible presets/custom placements sequentially from one source. Motion-to-still preparation extracts the first decoded frame and embeds that PNG unchanged in the PSD Smart Object; a still cannot create motion. Source selection remains session-only, workspace handoffs select the corresponding master, and history is filtered by source plus placement. Exports remain individual. Isolated preparation checks verified motion-to-still, motion-to-motion, still-to-still, and rejection of still-to-motion; the first-frame preview bytes match the PSD embedded source. No verification outputs were added to shared history.
+
+
+### Session-only workspace controls
+Shot/master selection, mode changes and framing stay in memory and reset on page refresh. CREATE and ANIMATE open with no selected master; the motion master is labeled Key shot. Save brief and custom placement definitions are device-local. Browser settings never POST to Blob. Existing generated Sandbox media, generation recovery records, prepared outputs and curation/deletion remain shared and durable.
+
+Assistant requests compact background catalogs and omit bulk training captions, media URLs and unrelated asset provenance. Attached/selected asset details are prioritized; recent conversation turns are fitted to a 60 KiB text budget below the server limit. Verified a 100-asset, 24-turn payload shrank from 1.14 MB to 58 KB while preserving the latest request and focused assets. No inference was submitted for verification.

@@ -315,9 +315,15 @@ export async function handleStills(req, res, { local = false, env = process.env 
       const state = await load(cfg);
       return send(res, 200, { jobs: state.jobs.filter(j => j.input.missionId === missionId).map(publicJob) });
     }
-    if (action === 'job' || action === 'image') {
+    if (action === 'job' || action === 'job-snapshot' || action === 'image') {
       const id = url.searchParams.get('id');
       if (!idPattern.test(id || '')) fail(400, 'Invalid generation identifier.');
+      if (action === 'job-snapshot') {
+        const state = await load(cfg);
+        const job = state.jobs.find(item => item.id === id);
+        if (!job) fail(404, 'Generation not found.');
+        return send(res, 200, publicJob(job));
+      }
       if (action === 'job') return send(res, 200, await syncJob(cfg, id));
       const state = await load(cfg);
       if (!state.jobs.some(j => j.id === id && j.status === 'completed')) fail(404, 'Saved result not found.');

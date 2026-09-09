@@ -711,20 +711,6 @@
         "reviewNotes": "Selected as an initial motion study. Torso detailing drifts during ascent; further fidelity evaluation required."
       },
       {
-        "id": "08-repulsor",
-        "title": "Repulsor stance",
-        "src": "/media/derived/samples/08-repulsor.webp",
-        "variant": "Generated draft",
-        "width": 1280,
-        "height": 720,
-        "prompt": "IMK3GIK armor, original red and gold Iron Man Mark III armor with gold faceplate and a circular chest reactor. Dynamic three-quarter waist-up pose, raising his right arm and aiming his open palm toward the camera, palm repulsor glowing white, fingers clearly separated. Faceplate sharp and fully visible just behind the hand, left arm lowered. Hero placed on the left side of a wide frame. Photographed at life size with a wide cinema lens, dramatic foreshortening, crisp metal details, soft bright side lighting, dark charcoal studio background, clear empty space to the right. Premium theatrical character key art, no text or logo.",
-        "seed": 503,
-        "checkpoint": 750,
-        "scale": 1,
-        "generatedAt": "2026-09-07T19:40:30.7580805Z",
-        "method": "Text-guided LoRA generation"
-      },
-      {
         "id": "18-helmet-shadow",
         "title": "The icon",
         "src": "/media/derived/samples/18-helmet-shadow.webp",

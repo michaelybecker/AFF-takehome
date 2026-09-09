@@ -11,7 +11,6 @@ if (!nativeSource) throw new Error('Also provide the native reference results di
 const destination = path.join(app, 'public/media/derived/samples');
 await fs.mkdir(destination, { recursive: true });
 const selection = [
-  ['08-repulsor', 'Repulsor stance'],
   ['18-helmet-shadow', 'The icon'],
 ];
 const samples = [];

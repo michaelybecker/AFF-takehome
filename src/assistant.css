@@ -28,3 +28,8 @@ body.assistant-workspace-active .app-header,body.assistant-workspace-active .sid
 .assistant-reference-picker .assistant-reference:has(input:focus-visible){outline:2px solid #82b3ff;outline-offset:1px}
 .assistant-review-controls{display:flex;gap:8px;padding:8px 14px;min-width:0}.assistant-review-controls select{flex:1;min-width:0;max-width:100%;background:#242424;color:#eee;border:1px solid #626262;border-radius:4px;padding:8px}.assistant-review-evidence{margin:8px 14px;font-size:12px;max-height:220px;overflow:auto}.assistant-review-evidence>div{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}.assistant-review-evidence figure{margin:0;min-width:0}.assistant-review-evidence img{width:100%;height:85px;object-fit:contain;background:#111}.assistant-review-evidence figcaption{overflow-wrap:anywhere;font-size:10px}.assistant-review-progress{margin:6px 14px;font-size:12px}
 .is-expanded .assistant-review-controls,.is-expanded .assistant-review-evidence,.is-expanded .assistant-review-progress{width:min(820px,calc(100% - 32px));margin-left:auto;margin-right:auto;box-sizing:border-box}.assistant-review-controls,.assistant-review-evidence,.assistant-review-progress{flex-shrink:0}.assistant-review-evidence{max-height:180px}
+
+.assistant-selected-frame { display:flex; align-items:center; gap:16px; margin:12px 0; }
+.assistant-action .assistant-selected-frame img { width:160px; height:90px; object-fit:contain; background:#111; margin:0; border-radius:4px; }
+.assistant-selected-frame figcaption { display:flex; flex-direction:column; gap:5px; font-size:12px; }
+.assistant-motion-source summary { cursor:pointer; margin:12px 0; font-size:12px; }

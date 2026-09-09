@@ -1,6 +1,5 @@
-import { saveWorkspaceValue } from './workspaceSync';
 import { useSyncExternalStore } from 'react';
-import { initialMissions, missionStorageKey, newMission, type MissionState } from './missions';
+import { initialMissions, newMission, missionStorageKey, deletedProjectsKey, type MissionState } from './missions';
 import { clipTitle, type CampaignMaster, type Manifest } from './data';
 import { stillApi, motionApi, type LiveJob, type LiveStatus, type MotionStatus } from './provider';
 
@@ -19,12 +18,15 @@ function savedRemovals(): string[] {
   catch { return []; }
 }
 let removed = new Set<string>(savedRemovals());
+const pendingRemovals = new Set<string>();
+const removalErrors = new Map<string, string>();
+const hidden = (id: string) => removed.has(id) || pendingRemovals.has(id);
 function persistRemovals() {
   try { localStorage.setItem(removedKey, JSON.stringify([...removed])); }
   catch { /* The server registry remains durable when browser storage is unavailable. */ }
 }
 export function projectAssets(manifest: Manifest) {
-  return [...assets, ...(manifest.campaignMasters || [])].filter((a, i, all) => !removed.has(a.id) && all.findIndex(b => b.id === a.id) === i);
+  return [...assets, ...(manifest.campaignMasters || [])].filter((a, i, all) => !hidden(a.id) && all.findIndex(b => b.id === a.id) === i);
 }
 export async function refreshExplorations() {
   const response = await fetch('/api/explorations');
@@ -34,7 +36,7 @@ export async function refreshExplorations() {
   removed = new Set([...removed, ...data.removed]);
   persistRemovals();
   const ids = new Set(data.assets.map((a: CampaignMaster) => a.id));
-  assets = [...data.assets, ...assets.filter(a => !a.blobBacked && !ids.has(a.id))].filter(a => !removed.has(a.id)); emit();
+  assets = [...data.assets, ...assets.filter(a => !a.blobBacked && !ids.has(a.id))].filter(a => !hidden(a.id)); emit();
 }
 const listeners = new Set<() => void>();
 export const assistantJobs = new Set<string>();
@@ -42,27 +44,61 @@ const subscribe = (fn: () => void) => { listeners.add(fn); return () => { listen
 const emit = () => listeners.forEach(fn => fn());
 export function setStudioMissions(value: MissionState | ((previous: MissionState) => MissionState)) {
   missions = typeof value === 'function' ? value(missions) : value;
-  try { saveWorkspaceValue(missionStorageKey, JSON.stringify(missions)); } catch { /* In-memory workspace remains usable. */ }
   emit();
+}
+export function deleteStudioProject(id: string) {
+  const remaining = missions.missions.filter(m => m.id !== id);
+  if (remaining.length === missions.missions.length) return;
+  if (!remaining.length) remaining.push({ ...newMission(), title: 'Untitled project' });
+  const next = { ...missions, missions: remaining, selectedId: missions.selectedId === id ? remaining[0].id : missions.selectedId };
+  const deleted = new Set<string>(JSON.parse(localStorage.getItem(deletedProjectsKey) || '[]'));
+  deleted.add(id);
+  localStorage.setItem(deletedProjectsKey, JSON.stringify([...deleted]));
+  localStorage.setItem(missionStorageKey, JSON.stringify(next));
+  setStudioMissions(next);
 }
 export function setStudioAssets(value: CampaignMaster[] | ((previous: CampaignMaster[]) => CampaignMaster[])) {
   const next = typeof value === 'function' ? value(assets) : value;
   // Polling may refresh a completed job, but must not discard a prepared candidate.
   const saved = assets.filter(asset => asset.prepared);
-  assets = [...saved, ...next.filter(asset => !saved.some(item => item.id === asset.id && item.campaignId === asset.campaignId))].filter(a => !removed.has(a.id)); emit();
+  assets = [...saved, ...next.filter(asset => !saved.some(item => item.id === asset.id && item.campaignId === asset.campaignId))].filter(a => !hidden(a.id)); emit();
+}
+export function useSandboxRemovalError(id: string) {
+  return useSyncExternalStore(subscribe, () => removalErrors.get(id) || '');
 }
 export async function changeSandboxAsset(asset: CampaignMaster, action: 'save' | 'delete') {
-  const response = await fetch('/api/explorations', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Content-Studio': '1' }, body: JSON.stringify({ action, id: asset.id, kind: asset.kind }) });
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message || 'Curation failed.');
+  if (pendingRemovals.has(asset.id)) return;
+  const previousAsset = assets.find(a => a.id === asset.id) || asset;
+  const previousIndex = assets.findIndex(a => a.id === asset.id);
   if (action === 'delete') {
-    removed.add(asset.id); assets = assets.filter(a => a.id !== asset.id);
-    setStudioMissions(previous => ({ ...previous, missions: previous.missions.map(m => ({ ...m, draft: { ...m.draft, stillId: m.draft.stillId === asset.id ? '' : m.draft.stillId, motionId: m.draft.motionId === asset.id ? '' : m.draft.motionId } })) }));
-  } else { removed.delete(asset.id); assets = [data.asset, ...assets.filter(a => a.id !== asset.id)]; }
-  persistRemovals();
-  try { localStorage.setItem(explorationKey, JSON.stringify(savedExplorations().filter(a => a.id !== asset.id))); }
-  catch { /* The server has already saved this change. */ }
-  emit();
+    removalErrors.delete(asset.id);
+    pendingRemovals.add(asset.id);
+    assets = [...assets]; emit(); // Hide immediately, before any network work.
+  }
+  try {
+    const response = await fetch('/api/explorations', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Content-Studio': '1' }, body: JSON.stringify({ action, id: asset.id, kind: asset.kind }) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Curation failed.');
+    if (action === 'delete') {
+      removed.add(asset.id); assets = assets.filter(a => a.id !== asset.id);
+      setStudioMissions(previous => ({ ...previous, missions: previous.missions.map(m => ({ ...m, draft: { ...m.draft, stillId: m.draft.stillId === asset.id ? '' : m.draft.stillId, motionId: m.draft.motionId === asset.id ? '' : m.draft.motionId } })) }));
+    } else { removed.delete(asset.id); assets = [data.asset, ...assets.filter(a => a.id !== asset.id)]; }
+    persistRemovals();
+    try { localStorage.setItem(explorationKey, JSON.stringify(savedExplorations().filter(a => a.id !== asset.id))); }
+    catch { /* The server has already saved this change. */ }
+  } catch (error) {
+    if (action === 'delete') {
+      // Restore just this item, without overwriting concurrent curation or new assets.
+      if (!removed.has(asset.id) && !assets.some(a => a.id === asset.id)) {
+        assets = [...assets]; assets.splice(Math.max(0, previousIndex), 0, previousAsset);
+      }
+      removalErrors.set(asset.id, `Removal was not saved. Please retry. ${error instanceof Error ? error.message : ''}`);
+    }
+    throw error;
+  } finally {
+    pendingRemovals.delete(asset.id);
+    assets = [...assets]; emit();
+  }
 }
 export function useStudioMissions() { return [useSyncExternalStore(subscribe, () => missions), setStudioMissions] as const; }
 export function useStudioAssets() { return [useSyncExternalStore(subscribe, () => assets), setStudioAssets] as const; }
@@ -97,7 +133,7 @@ export async function capabilities() {
 export async function executeAssistantAction(action: AssistantAction, manifest: Manifest, progress: (text: string, job?: LiveJob) => void): Promise<Receipt> {
   const a = action.arguments;
   if (action.name === 'navigate') {
-    if (!['identity', 'create', 'animate', 'adapt'].includes(String(a.route))) throw new Error('Unknown workspace view.');
+    if (!['identity', 'create', 'animate', 'deliver'].includes(String(a.route))) throw new Error('Unknown workspace view.');
     location.hash = a.route === 'identity' ? '#/identity' : `#/activate/${a.route}`;
     return { text: `Opened ${a.route}.` };
   }

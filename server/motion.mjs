@@ -381,9 +381,15 @@ export async function handleMotion(req, res, { local = false, env = process.env 
       for (const job of state.jobs.filter(j => j.input.missionId === missionId && active.has(j.status) && j.providerId && Date.now() - Date.parse(j.createdAt) < pollWindow)) if (cfg.apiKey) watch(cfg, job.id);
       return send(res, 200, { jobs: state.jobs.filter(j => j.input.missionId === missionId).map(publicJob) });
     }
-    if (action === 'job' || action === 'video') {
+    if (action === 'job' || action === 'job-snapshot' || action === 'video') {
       const id = url.searchParams.get('id');
       if (!idPattern.test(id || '')) fail(400, 'Invalid motion identifier.');
+      if (action === 'job-snapshot') {
+        const state = await load(cfg);
+        const job = state.jobs.find(item => item.id === id);
+        if (!job) fail(404, 'Generation not found.');
+        return send(res, 200, publicJob(job));
+      }
       if (action === 'job') return send(res, 200, await syncJob(cfg, id));
       return await serveVideo(req, res, cfg, id);
     }

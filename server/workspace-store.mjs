@@ -33,7 +33,7 @@ export async function readSnapshot(env) {
     } // Read legacy state through a fresh origin-side copy, never the mutable CDN URL.
     if (!result) return null;
     const bytes=Buffer.from(await new Response(result.stream).arrayBuffer());
-    if(createHash('md5').update(bytes).digest('hex')!==hash) throw Object.assign(new Error('Workspace is refreshing. Retry shortly.'),{status:409});
+    if(createHash('md5').update(bytes).digest('hex')!==hash) throw Object.assign(new Error('Workspace is refreshing. Retry shortly.'),{status:409,code:'WORKSPACE_BUSY'});
     return {value:unseal(bytes,env),etag:metadata.etag};
   } catch(e) { if(e instanceof BlobNotFoundError) return null; throw e; }
 }
@@ -42,7 +42,7 @@ async function writeSnapshot(env,value,etag) {
   await put(`${prefix(env)}/states/${hash}.bin`,bytes,{...opts(env),contentType:'application/octet-stream',allowOverwrite:false});
   return put(name(env),bytes,{...opts(env),contentType:'application/octet-stream',...(etag?{ifMatch:etag,allowOverwrite:true}:{allowOverwrite:false})});
 }
-const busy = () => Object.assign(new Error('Workspace is saving another change. Retry shortly.'),{status:409});
+const busy = () => Object.assign(new Error('Workspace is saving another change. Retry shortly.'),{status:409,code:'WORKSPACE_BUSY'});
 async function acquire(env) {
   const previous = await readSnapshot(env);
   if(!previous) throw Object.assign(new Error('Workspace migration has not completed.'),{status:503});
@@ -100,8 +100,30 @@ export async function checkpoint() {
   }
   await walk(ctx.root);await persist(ctx);
 }
-export async function withWorkspace(env,operation,{readonly=false}={}) {
-  const current=readonly?await readSnapshot(env):await acquire(env);
+async function release(ctx) {
+  // Use only committed state. Check ownership before retrying an uncertain write.
+  let value=structuredClone(ctx.committed),etag=ctx.etag;
+  for(let attempt=0;attempt<3;attempt++) {
+    value.lease=null;
+    try { await writeSnapshot(ctx.env,value,etag); return; }
+    catch(error) {
+      const latest=await readSnapshot(ctx.env);
+      if(!latest || latest.value.lease?.owner!==ctx.owner)return;
+      if(attempt===2)throw Object.assign(new Error('The change is saved, but workspace cleanup could not finish. Retry shortly.'),{status:503});
+      value=structuredClone(latest.value);etag=latest.etag;
+    }
+  }
+}
+export async function withWorkspace(env,operation,{readonly=false,waitMs=0}={}) {
+  const deadline=Date.now()+waitMs;
+  let current;
+  for(;;) {
+    try { current=readonly?await readSnapshot(env):await acquire(env); break; }
+    catch(error) {
+      if(readonly || error.code!=='WORKSPACE_BUSY' || Date.now()>=deadline)throw error;
+      await new Promise(resolve=>setTimeout(resolve,250+Math.random()*250));
+    }
+  }
   if(!current)throw Object.assign(new Error('Workspace migration has not completed.'),{status:503});
   const root=await mkdtemp(path.join(tmpdir(),'gik-'));
   const ctx={...current,env,root,readonly,baseline:{},committed:structuredClone(current.value)};
@@ -113,8 +135,8 @@ export async function withWorkspace(env,operation,{readonly=false}={}) {
     await Promise.all(['stills','motion','deliveries'].map(d=>mkdir(path.join(root,d),{recursive:true})));
     return await context.run(ctx,operation);
   } finally {
-    if(!readonly){ctx.committed.lease=null;try{await writeSnapshot(env,ctx.committed,ctx.etag);}catch{ /* A lost lease must never overwrite its successor. */ }}
-    await rm(root,{recursive:true,force:true});
+    try { if(!readonly)await release(ctx); }
+    finally { await rm(root,{recursive:true,force:true}); }
   }
 }
 export async function migrateWorkspace(env,source) {

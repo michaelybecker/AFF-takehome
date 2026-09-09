@@ -16,7 +16,7 @@ const definitions = {
   generate_still: ['Create one identity still when requested. Set confirmRequired=false for an explicit generation or iteration request; true for a prompt draft or options only.', object({ missionId: id, direction: string(1500, 1), confirmRequired: { type: 'boolean' } })],
   generate_motion: ['Propose animation of one explicitly chosen starting still, either a completed same-project live still or a curated source in current motion status. Use image-to-video and empty referenceIds. Do not substitute arbitrary default images. Set confirmRequired=false for explicit generation or iteration requests; true for draft options or unresolved creative input.', object({ missionId: id, sourceId: id, direction: string(1500, 1), duration: integer(5, 15), mode: choice('image-to-video'), referenceIds: { type: 'array', items: id, maxItems: 0 }, confirmRequired: { type: 'boolean' } })],
   inspect_identity: ['Open an existing Identity section; this is navigation, not visual inspection by the model.', object({ section: choice('overview', 'canonical', 'motion', 'expression', 'semantic', 'derived') })],
-  navigate: ['Open an existing app route.', object({ route: choice('identity', 'create', 'animate', 'adapt') })],
+  navigate: ['Open an existing app route.', object({ route: choice('identity', 'create', 'animate', 'deliver') })],
   select_master: ['Propose selection of an existing same-project master. Selection is not creative approval.', object({ missionId: id, masterId: string(200, 1), kind: choice('still', 'motion') })],
 };
 export const assistantTools = Object.entries(definitions).map(([name, [description, parameters]]) => ({ type: 'function', name, description, strict: true, parameters }));
@@ -152,7 +152,7 @@ export async function handleAssistant(req, res, { local = false, env = process.e
     }
     let text = texts.join('\n').trim();
     // Tool calls only propose actions; do not let accompanying model prose imply execution.
-    if (actions.length) text = `Proposed: ${actions.map(action => action.name.replaceAll('_', ' ')).join(', ')}. Nothing has been executed. ${actions.some(action => action.arguments.confirmRequired) ? 'Review the creative direction and choose Generate when ready.' : 'Requested generation starts in the application; other changes can be applied below.'}`;
+    if (actions.length) text = `Proposed: ${actions.map(action => action.name.replaceAll('_', ' ')).join(', ')}. ${actions.some(action => action.arguments.confirmRequired) ? 'Review the creative direction and choose Generate when ready.' : 'Generation submission and progress appear below; other changes can be applied there.'}`;
     if (!text || text.length > 12000) fail(502, 'Assistant returned an invalid reply.');
     const output = scrub({ text, actions }, secrets);
     if (output.actions.some(action => !valid(action.arguments, definitions[action.name][1]))) fail(502, 'Assistant returned an invalid reply.');

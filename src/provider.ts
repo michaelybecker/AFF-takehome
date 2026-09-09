@@ -1,6 +1,6 @@
 import type { CampaignMaster } from './data';
 import type { Mission } from './missions';
-export type Mode = 'create' | 'animate' | 'adapt';
+export type Mode = 'create' | 'animate' | 'deliver';
 export type GenerationRequest = {
   dimensions?: { width: number; height: number };
   id: string; mode: Mode; identity: string; identityKitVersion: string; adaptationId: string | null;
