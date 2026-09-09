@@ -10,13 +10,13 @@ import { ArrowRight, Check, Download, Expand, Film, ImagePlus, LockKeyhole, Penc
 import { type CampaignMaster, type Manifest } from './data';
 import { ImageViewer, Modal, StillTile, VideoPlayer, VideoTile } from './Media';
 import { type GenerationRequest, type Mode } from './provider';
-import { anniversaryId, missionStorageKey, newMission, placements as anniversaryPlacements, type Draft, type PlacementFraming, type Mission } from './missions';
+import { anniversaryId, identityWorkspaceId, missionStorageKey, newMission, placements as anniversaryPlacements, type Draft, type PlacementFraming, type Mission } from './missions';
 import LiveStills from './LiveStills';
 import LiveMotion from './LiveMotion';
 import './activation.css';
 import { assetMime, startAssetDrag, acceptAssetDrag, attachToAssistant } from './assetDrag';
 import SandboxAction from './SandboxAction';
-import { assistantJobs, deleteStudioProject, projectAssets, useStudioAssets, useStudioMissions } from './assistant-bridge';
+import { deleteStudioProject, projectAssets, useStudioAssets, useStudioMissions } from './assistant-bridge';
 
 const asClip = (master: CampaignMaster) => ({ ...master, poster: master.poster || '', duration: master.duration || 0 });
 
@@ -25,7 +25,10 @@ export default function Activate({ mode, manifest }: { mode: Mode; manifest: Man
   const [editing, setEditing] = useState<Mission | null>(null);
   const [, setLiveMasters] = useStudioAssets();
   const visitJobs = useMemo(() => new Set<string>(), [mode]);
-  const mission = missions.missions.find(m => m.id === missions.selectedId) || missions.missions[0];
+  const deliveryProject = missions.missions.find(m => m.id === missions.selectedId && m.id !== identityWorkspaceId) || missions.missions.find(m => m.id !== identityWorkspaceId)!;
+  const identityMission = missions.missions.find(m => m.id === identityWorkspaceId)!;
+  const projects = missions.missions.filter(m => m.id !== identityWorkspaceId);
+  const mission = mode === 'deliver' ? deliveryProject : identityMission;
   const draft = mission.draft;
   const campaignId = mission.id;
   const isAnniversary = campaignId === anniversaryId;
@@ -47,7 +50,7 @@ export default function Activate({ mode, manifest }: { mode: Mode; manifest: Man
   }, [campaignId]);
   const [viewer, setViewer] = useState<{ title: string; src: string; subtitle: string; master?: CampaignMaster } | null>(null);
 
-  const masters = projectAssets(manifest).filter(m => m.campaignId === campaignId);
+  const masters = projectAssets(manifest);
   const still = masters.find(m => m.id === draft.stillId && m.kind === 'still');
   const motion = masters.find(m => m.id === draft.motionId && m.kind === 'motion');
   const placement = placements.find(p => p.id === draft.placementId) || placements[0] || {id:'',name:'No format selected',kind:'still' as const,ratio:'',value:2/3};
@@ -74,7 +77,7 @@ export default function Activate({ mode, manifest }: { mode: Mode; manifest: Man
   useEffect(() => {
     const from = previousMode.current; previousMode.current = mode;
     if (mode === 'deliver' && from !== 'deliver') {
-      update({ adaptSourceId: from === 'animate' ? draft.motionId : draft.stillId, placementId: from === 'animate' ? 'A03' : 'A01' });
+      update({ adaptSourceId: from === 'animate' ? identityMission.draft.motionId : identityMission.draft.stillId, placementId: from === 'animate' ? 'A03' : 'A01' });
       setGeneratedPreview(null);
     }
   }, [mode]);
@@ -86,7 +89,7 @@ export default function Activate({ mode, manifest }: { mode: Mode; manifest: Man
     source: isAnimate ? draft.animationSourceId || null : source?.id || null, campaign: mission.title, campaignId, artifactId, outputKind: kind,
     mission: { ...mission, draft: undefined, briefs: undefined }, sourceLineage: source?.lineage || null,
     direction: isCreate ? direction.trim() : 'Reframe the selected master for the placement. Add typography in downstream Adobe apps.',
-    placement: isCreate ? (kind === 'still' ? (isAnniversary ? 'Anniversary key-art master' : 'Still master') : 'Key shot') : placement.name,
+    placement: isCreate ? (kind === 'still' ? 'Key-art master' : 'Key shot') : placement.name,
     dimensions: customPlacements.find(p => p.id === placement.id),
     aspectRatio: isCreate ? '16:9' : placement.ratio,
     duration: kind === 'motion' ? (isCreate ? draft.duration : selected?.duration ?? null) : null,
@@ -126,30 +129,30 @@ export default function Activate({ mode, manifest }: { mode: Mode; manifest: Man
       update({ motionId: id, adaptSourceId: id });
     }
   };
-  const receiveResults = (type: 'still' | 'motion', results: CampaignMaster[]) => setLiveMasters(previous => [
-    ...previous.filter(m => (assistantJobs.has(m.id) && !results.some(r => r.id === m.id)) || m.campaignId !== campaignId || m.kind !== type),
-    ...results.filter(m => isCreate || m.id === draft.stillId || m.id === draft.motionId),
+  const receiveResults = (_type: 'still' | 'motion', results: CampaignMaster[]) => setLiveMasters(previous => [
+    ...previous.filter(asset => !results.some(result => result.id === asset.id)), ...results,
   ]);
   const liveControls = <>
-    <LiveStills key={`${campaignId}-${mode}-stills`} mission={mission} manifest={manifest} visible={isCreate && kind === 'still'} visitJobs={visitJobs} onResults={results => receiveResults('still', results)} />
-    <div hidden={isCreate && kind !== 'motion'}><LiveMotion key={`${campaignId}-${mode}-motion`} mission={mission} manifest={manifest} visible={isAnimate} visitJobs={visitJobs} assets={masters} onSource={value => { setStartingFrame(value); if (value && value.id !== draft.animationSourceId) update({ animationSourceId: value.id, motionId: '' }); }} onDuration={duration => update({ duration })} onResults={results => receiveResults('motion', results)} /></div>
+    <LiveStills key={`${campaignId}-${mode}-stills`} mission={identityMission} manifest={manifest} visible={isCreate && kind === 'still'} visitJobs={visitJobs} onResults={results => receiveResults('still', results)} />
+    <div hidden={isCreate && kind !== 'motion'}><LiveMotion key={`${campaignId}-${mode}-motion`} mission={identityMission} manifest={manifest} visible={isAnimate} visitJobs={visitJobs} assets={masters} onSource={value => { setStartingFrame(value); if (mode !== 'deliver' && value && value.id !== draft.animationSourceId) update({ animationSourceId: value.id, motionId: '' }); }} onDuration={duration => update({ duration })} onResults={results => receiveResults('motion', results)} /></div>
   </>;
   const layoutPreview = (expanded = false) => <div className={`placement-canvas ${kind === 'still' ? 'transparent-canvas' : ''}`} style={{ aspectRatio: placement.value, width: `min(100%, ${(expanded ? 600 : 390) * placement.value}px)` }}>
     {selected && applicable && placements.length > 0 ? <>{expanded ? (kind === 'still' ? <img src={previewSrc} alt={selected.title} style={{ objectFit: framing.fit, objectPosition: `${framing.focalX}% ${framing.focalY}%` }} /> : <video key={selected.id} src={selected.src} poster={selected.poster} controls autoPlay muted playsInline style={{ objectFit: framing.fit, objectPosition: `${framing.focalX}% ${framing.focalY}%` }} />) : <button className="placement-media" aria-label="Open layout preview" onClick={() => setShowLayout(true)} onPointerMove={e => { if (e.pointerType === 'touch' || kind === 'still') return; const v = e.currentTarget.querySelector('video'); if (v && v.readyState >= 1 && Number.isFinite(v.duration)) { const rect = e.currentTarget.getBoundingClientRect(); v.currentTime = Math.max(0, Math.min(.999, (e.clientX - rect.left) / rect.width)) * v.duration; } }}>{kind === 'still' ? <img src={previewSrc} alt={selected.title} style={{ objectFit: framing.fit, objectPosition: `${framing.focalX}% ${framing.focalY}%` }} /> : <video key={selected.id} src={selected.src} poster={selected.poster} muted playsInline preload="metadata" style={{ objectFit: framing.fit, objectPosition: `${framing.focalX}% ${framing.focalY}%` }} />}<span className="tile-open" title="Open layout preview"><Expand size={16} /></span></button>}</> : <div className="campaign-empty"><LockKeyhole size={25} /><h3>{selected?.kind === 'still' && kind === 'motion' ? 'Motion N/A for a still source' : 'Source required'}</h3><p>{placement.ratio} / {placement.id}</p></div>}
   </div>;
   return <>
     <div className="breadcrumbs activation-breadcrumbs">Marvel Studios <span>/</span> {mode.charAt(0).toUpperCase() + mode.slice(1)}</div>
-    <div className="page-heading activation-page-heading"><div><span className="eyebrow">IDENTITY ACTIVATION</span><h1>{isAnimate ? 'Animate your still' : isCreate ? 'Create from identity' : 'Prepare a bespoke format'}</h1><p className="subheading">{mission.title}{mission.occasion && <> <span className="muted-dot">·</span> {mission.occasion}</>}</p></div><div className="heading-actions"><button className="button secondary" onClick={save}><Save size={16} />Save brief</button><button className="icon-button" title="Download brief" aria-label="Download brief" onClick={download}><Download size={18} /></button></div></div>
+    <div className="page-heading activation-page-heading"><div><span className="eyebrow">IDENTITY ACTIVATION</span><h1>{isAnimate ? 'Animate your still' : isCreate ? 'Create from identity' : 'Prepare a bespoke format'}</h1><p className="subheading">{mission.title}{mission.occasion && <> <span className="muted-dot">·</span> {mission.occasion}</>}</p></div><div className="heading-actions">{!isCreate && <button className="button secondary" onClick={save}><Save size={16} />Save brief</button>}<button className="icon-button" title="Download brief" aria-label="Download brief" onClick={download}><Download size={18} /></button></div></div>
     <div className="workspace-status"><span className="status amber">{selected ? 'Master selected / Review pending' : 'Master selection pending'}</span></div>
-    <div className="mission-toolbar"><label className="field">Project<select disabled={busy} aria-label="Project" value={campaignId} onChange={e => setMissions(previous => ({ ...previous, selectedId: e.target.value }))}>{missions.missions.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}</select></label><button className="icon-button" title="Edit project" aria-label="Edit project" onClick={() => setEditing({ ...mission })}><Pencil size={16} /></button><button className="icon-button" disabled={busy} title="Delete project" aria-label="Delete project" onClick={() => {
-      if (!confirm(`Delete "${mission.title}" from this device? Generated files remain stored. ${missions.missions.length === 1 ? 'A blank project will open.' : 'Another project will open.'}`)) return;
+    {!isCreate && <><div className="mission-toolbar"><label className="field">Project<select disabled={busy} aria-label="Project" value={campaignId} onChange={e => setMissions(previous => ({ ...previous, selectedId: e.target.value }))}>{projects.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}</select></label><button className="icon-button" title="Edit project" aria-label="Edit project" onClick={() => setEditing({ ...mission })}><Pencil size={16} /></button><button className="icon-button" disabled={busy} title="Delete project" aria-label="Delete project" onClick={() => {
+      if (!confirm(`Delete "${mission.title}" from this device? Generated files remain stored. ${projects.length === 1 ? 'A blank project will open.' : 'Another project will open.'}`)) return;
       try { deleteStudioProject(campaignId); setEditing(null); } catch { setNotice('Project could not be removed from device storage. Please retry.'); }
-    }}><Trash2 size={16} /></button><button className="button secondary" disabled={missions.missions.length >= 50} onClick={() => setEditing(newMission())}><Plus size={16} />New project</button></div>
+    }}><Trash2 size={16} /></button><button className="button secondary" disabled={projects.length >= 50} onClick={() => setEditing(newMission())}><Plus size={16} />New project</button></div>
     <details id="project-brief" className="mission-overview"><summary>Project brief <span>{draft.headline || mission.title}</span></summary><div className="campaign-mission"><div><span className="eyebrow">MISSION BRIEF</span><h2>{draft.headline || mission.title}</h2><p>{mission.summary || 'Creative brief in progress.'}</p></div><dl><div><dt>Audience</dt><dd>{mission.audience || 'Not set'}</dd></div><div><dt>Objective</dt><dd>{mission.objective || 'Not set'}</dd></div><div><dt>Market</dt><dd>{mission.market || 'Not set'}</dd></div></dl></div>
     <div className="mission-details"><dl className="package-list"><div><dt>Owner</dt><dd>{mission.owner || 'Not set'}</dd></div><div><dt>Message</dt><dd>{mission.message || 'Not set'}</dd></div><div><dt>Constraints</dt><dd>{mission.constraints || 'No additional constraints'}</dd></div></dl></div></details>
+     </>}
     <div className="activation-identity"><img src="/media/stills/studio-hero-portrait.webp" alt="Mark III production portrait" /><div><span className="eyebrow">ACTIVE IDENTITY</span><strong>Iron Man / Mark III</strong></div><span className="package-version">Identity kit v{manifest.version}</span><a href="#/identity">View identity <ArrowRight size={14} /></a></div>
     <div className={`activation-layout anniversary-layout ${isCreate ? 'create-layout' : ''}`}><div className="activation-content">
-      <div className="campaign-section-title"><div><span className="eyebrow">{artifactId} / {isCreate ? 'CAMPAIGN MASTER' : 'FORMAT PREPARATION'}</span><h2>{isCreate ? (kind === 'still' ? (isAnniversary ? 'Anniversary key art' : 'Still explorations') : 'Key shot') : placement.name}</h2></div><span className="quiet-label">{isCreate ? '16:9' : placement.ratio}{kind === 'motion' && (isCreate || selected?.duration) ? ` · ${isCreate ? draft.duration : selected?.duration}s` : ''}</span></div>
+      <div className="campaign-section-title"><div><span className="eyebrow">{artifactId} / {isCreate ? 'IDENTITY MASTER' : 'FORMAT PREPARATION'}</span><h2>{isCreate ? (kind === 'still' ? 'Key art' : 'Key shot') : placement.name}</h2></div><span className="quiet-label">{isCreate ? '16:9' : placement.ratio}{kind === 'motion' && (isCreate || selected?.duration) ? ` · ${isCreate ? draft.duration : selected?.duration}s` : ''}</span></div>
       {isCreate ? <div className="campaign-stage master-drop-target" onDragOver={acceptAssetDrag} onDrop={event => { if (!acceptAssetDrag(event)) return; const asset = candidates.find(item => item.id === event.dataTransfer.getData(assetMime)); if (asset) selectMaster(asset.id, asset.kind); }}>{selected ? (selected.kind === 'motion' ? <VideoTile clip={asClip(selected)} onOpen={() => openMaster(selected)} description="Generated draft / Review pending" /> : <StillTile item={{ ...selected, variant: 'Generated draft / Review pending', category: 'hero' }} onOpen={() => openMaster(selected)} />) : isAnimate && startingFrame ? <div className="campaign-empty motion-pending"><img className="motion-pending-background" src={startingFrame.src} alt="" /><div className="motion-pending-copy"><Film size={30} /><h3>Motion master pending</h3><p>Starting frame selected</p><button className="text-button" onClick={() => setViewer({ title: startingFrame.title, src: startingFrame.src, subtitle: 'Starting frame' })}>View starting frame</button></div></div> : <div className="campaign-empty">{kind === 'still' ? <ImagePlus size={30} /> : <Film size={30} />}<h3>{kind === 'still' ? 'Key-art master pending' : 'Motion master pending'}</h3><p>{kind === 'still' ? 'Drop a Sandbox still here to make it the key-art master.' : 'Choose a starting frame.'}</p></div>}</div> : <div className="placement-stage">{layoutPreview()}</div>}
       <div className="campaign-stage-caption"><span>{isCreate ? selected ? 'Selected candidate / Review pending' : isAnimate && startingFrame ? 'Starting frame / Animation pending' : 'No generated master registered' : 'Framing preview / Source artwork preserved'}</span>{isCreate && selected && <button className="icon-button" title="Clear selected master" aria-label="Clear selected master" onClick={() => selectMaster('', kind)}><X size={16} /></button>}{isAnimate && startingFrame && !selected && <button className="icon-button" title="Clear starting frame" aria-label="Clear starting frame" onClick={() => { update({ animationSourceId: '' }); setStartingFrame(undefined); }}><X size={16} /></button>}{mode === 'create' && selected && <a className="text-button" href="#/activate/animate" onClick={() => update({ animationSourceId: selected.id, motionId: '' })}>Animate this still <Film size={14} /></a>}{isCreate && selected && <a className="text-button" href="#/activate/deliver" onClick={() => update({ placementId: kind === 'still' ? 'A01' : 'A03', adaptSourceId: selected.id })}>Open DELIVER <ArrowRight size={14} /></a>}</div>
       {isCreate && !!mission.briefs?.filter(b => b.outputKind === kind && b.mode === mode).length && <details className="mission-details"><summary>Prepared {kind === 'still' ? 'still' : 'motion'} briefs</summary>{mission.briefs.filter(b => b.outputKind === kind && b.mode === mode).map(brief => <div className="prepared-brief" key={brief.id}><strong>{brief.artifactId} / Output pending</strong><span>{new Date(brief.createdAt).toLocaleString()}</span><p>{brief.direction}</p><span>{brief.source ? `Source master: ${brief.source}` : 'No source master'}</span><button className="text-button" onClick={() => {

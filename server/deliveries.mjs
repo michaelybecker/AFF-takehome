@@ -22,12 +22,12 @@ async function sourceFor(input, env) {
   for (const kind of ['still', 'motion']) {
     const dir = path.resolve(kind === 'still' ? env.CONTENT_STUDIO_DATA_DIR || '.local-data/stills' : env.CONTENT_STUDIO_MOTION_DATA_DIR || '.local-data/motion');
     const jobs = await read(path.join(dir, 'jobs.json'), { jobs: [] });
-    const job = jobs.jobs.find(j => j.id === input.source && j.status === 'completed' && j.input.missionId === input.campaignId);
+    const job = jobs.jobs.find(j => j.id === input.source && j.status === 'completed');
     if (job) return { kind, file: path.join(dir, job.id + (kind === 'still' ? '.png' : '.mp4')), lineage: { jobId: job.id, sha256: job.sha256 } };
   }
   const manifest = await read('public/media/manifest.json', {});
   const registry = await read(path.join(workspaceRoot(), 'explorations.json'), { entries: [] });
-  const asset = [...(manifest.campaignMasters || []), ...registry.entries.map(e => e.asset)].find(a => a.id === input.source && a.campaignId === input.campaignId);
+  const asset = [...(manifest.campaignMasters || []), ...registry.entries.map(e => e.asset)].find(a => a.id === input.source);
   if (asset?.src?.startsWith('https://') && new URL(asset.src).hostname.endsWith('.public.blob.vercel-storage.com')) {
     const saved = await get(asset.src, {token:env.BLOB_READ_WRITE_TOKEN,access:'public'});
     if(!saved)throw Error('Saved master unavailable.');
@@ -82,8 +82,8 @@ async function render(input, env) {
     editable = { format: 'PSD', bytes: psd.length, src: `/api/deliveries?action=file&id=${input.id}&format=psd`, sourceWidth: meta.width, sourceHeight: meta.height, scale };
   } else {
     const framing = input.layout.fit === 'cover'
-      ? `scale=${width}:${height}:force_original_aspect_ratio=increase:force_divisible_by=2,crop=${width}:${height}:(iw-ow)*${x}:(ih-oh)*${y}`
-      : `scale=${width}:${height}:force_original_aspect_ratio=decrease:force_divisible_by=2,pad=${width}:${height}:(ow-iw)*${x}:(oh-ih)*${y}:color=0x202020`;
+      ? `scale=${width}:${height}:force_original_aspect_ratio=increase,scale=ceil(iw/2)*2:ceil(ih/2)*2,crop=${width}:${height}:(iw-ow)*${x}:(ih-oh)*${y}`
+      : `scale=${width}:${height}:force_original_aspect_ratio=decrease,scale='max(2,trunc(iw/2)*2)':'max(2,trunc(ih/2)*2)',pad=${width}:${height}:(ow-iw)*${x}:(oh-ih)*${y}:color=0x202020`;
     await exec(ffmpeg(), ['-y', '-v', 'error', '-i', source.file, '-vf', framing, '-map', '0:v:0', '-map', '0:a?', '-c:v', 'libx264', '-preset', 'fast', '-crf', '18', '-pix_fmt', 'yuv420p', '-c:a', 'aac', '-movflags', '+faststart', output], { timeout: 180000, windowsHide: true });
   }
   const result = { id: input.id, campaignId: input.campaignId, artifactId: input.artifactId, title: input.placement, kind, width, height, sourceId: input.source, sourceLineage: source.lineage, createdAt: new Date().toISOString(), request: input, bytes: (await stat(output)).size, src: `/api/deliveries?action=file&id=${input.id}` };
@@ -159,5 +159,5 @@ export async function handleDeliveries(req, res, { env = {} } = {}) {
     if (rendering) return json(res, 409, { message: 'An output is rendering. Try again when it finishes.' });
     rendering = true;
     try { return json(res, 200, await render(input, env)); } finally { rendering = false; }
-  } catch (error) { console.error('Delivery rendering:', error.message); return json(res, error.status || 500, { message: error.status ? error.message : 'Output could not be rendered. Check the selected master and try again.' }); }
+  } catch (error) { console.error('Delivery rendering:', error.message); if (error.stderr?.includes('Option') && error.stderr?.includes('not found')) return json(res, 503, { message: 'The server video renderer is incompatible with this format. The source is unchanged; a renderer update is required.' }); return json(res, error.status || 500, { message: error.status ? error.message : 'Output could not be rendered. Check the selected master and try again.' }); }
 }

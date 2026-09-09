@@ -149,3 +149,7 @@ Prepared-format cards include **Delete format**. Removal persists in the shared 
 
 ### Session-only workspace controls
 Shot/master selection, mode changes and framing stay in memory and reset on page refresh. CREATE and ANIMATE open with no selected master; the motion master is labeled Key shot. Save brief and custom placement definitions are device-local. Browser settings never POST to Blob. Existing generated Sandbox media, generation recovery records, prepared outputs and curation/deletion remain shared and durable.
+
+
+### Identity workspace and delivery projects
+CREATE and ANIMATE are scoped to Iron Man / Mark III, with one identity-wide Sandbox and session-only master/source choices. They have no project selector or inherited anniversary campaign brief. New generations use the identity workspace; historical generated assets remain accessible without rewriting their provenance. DELIVER introduces the project selector and defaults to the anniversary project. Any asset in the identity workspace can supply a delivery project; prepared outputs remain grouped by delivery project and format. This prototype contains one identity; multi-identity isolation is not implemented.

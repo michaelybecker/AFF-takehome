@@ -1,4 +1,5 @@
 import type { GenerationRequest } from './provider';
+export const identityWorkspaceId = 'identity-iron-man-mark-iii';
 export const anniversaryId = 'iron-man-20th-2028';
 export const missionStorageKey = 'content-studio-missions-v1';
 export const deletedProjectsKey = 'content-studio-deleted-projects-v1';
@@ -79,3 +80,5 @@ export function initialMissions(): MissionState {
   } catch { /* Keep the intact anniversary brief when browser storage is unavailable. */ }
   return initial;
 }
+
+export function identityWorkspace(): Mission { return { ...anniversary, id: identityWorkspaceId, title: 'Iron Man / Mark III', occasion: '', summary: 'Explore stills and motion from the Mark III identity.', audience: '', objective: '', market: '', owner: '', message: '', constraints: 'Preserve the Mark III identity. Project-specific campaign direction applies only when explicitly requested.', draft: { ...defaults, headline: '', supporting: '', cta: '' } }; }

@@ -313,7 +313,7 @@ export async function handleStills(req, res, { local = false, env = process.env 
       const missionId = url.searchParams.get('missionId');
       if (!idPattern.test(missionId || '')) fail(400, 'Invalid project identifier.');
       const state = await load(cfg);
-      return send(res, 200, { jobs: state.jobs.filter(j => j.input.missionId === missionId).map(publicJob) });
+      return send(res, 200, { jobs: state.jobs.filter(j => (missionId === 'identity-iron-man-mark-iii' || j.input.missionId === missionId)).map(publicJob) });
     }
     if (action === 'job' || action === 'job-snapshot' || action === 'image') {
       const id = url.searchParams.get('id');

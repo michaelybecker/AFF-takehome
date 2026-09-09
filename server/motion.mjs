@@ -161,8 +161,8 @@ async function sourceStill(cfg, input) {
   if (curatedReferences.some(ref => ref.id === input.sourceId)) return curatedStill(input, input.sourceId);
   const state = JSON.parse(await readFile(path.join(cfg.stillRoot, 'jobs.json'), 'utf8'));
   const job = state.jobs?.find(j => j.id === input.sourceId);
-  if (!job || job.status !== 'completed' || !['serverless', 'krea'].includes(job.backend) || job.input?.missionId !== input.missionId || job.input.identityKitVersion !== input.identityKitVersion
-    || !idPattern.test(job.providerId || '') || (job.backend !== 'krea' && !/^[0-9a-f-]{36}$/.test(job.deploymentId || '')) || !/^[a-f0-9]{64}$/.test(job.sha256 || '')) fail(409, 'Select a completed live still from this project and identity kit.');
+  if (!job || job.status !== 'completed' || !['serverless', 'krea'].includes(job.backend) || job.input.identityKitVersion !== input.identityKitVersion
+    || !idPattern.test(job.providerId || '') || (job.backend !== 'krea' && !/^[0-9a-f-]{36}$/.test(job.deploymentId || '')) || !/^[a-f0-9]{64}$/.test(job.sha256 || '')) fail(409, 'Select a completed live still from this identity kit.');
   const manifest = JSON.parse(await readFile(new URL('../public/media/manifest.json', import.meta.url), 'utf8'));
   if (manifest.version !== input.identityKitVersion) fail(409, 'Refresh the identity kit and select a matching live still.');
   const localImage = await readFile(path.join(cfg.stillRoot, `${job.id}.png`));
@@ -378,8 +378,8 @@ export async function handleMotion(req, res, { local = false, env = process.env 
       const missionId = url.searchParams.get('missionId');
       if (!idPattern.test(missionId || '')) fail(400, 'Invalid project identifier.');
       const state = await load(cfg);
-      for (const job of state.jobs.filter(j => j.input.missionId === missionId && active.has(j.status) && j.providerId && Date.now() - Date.parse(j.createdAt) < pollWindow)) if (cfg.apiKey) watch(cfg, job.id);
-      return send(res, 200, { jobs: state.jobs.filter(j => j.input.missionId === missionId).map(publicJob) });
+      for (const job of state.jobs.filter(j => (missionId === 'identity-iron-man-mark-iii' || j.input.missionId === missionId) && active.has(j.status) && j.providerId && Date.now() - Date.parse(j.createdAt) < pollWindow)) if (cfg.apiKey) watch(cfg, job.id);
+      return send(res, 200, { jobs: state.jobs.filter(j => (missionId === 'identity-iron-man-mark-iii' || j.input.missionId === missionId)).map(publicJob) });
     }
     if (action === 'job' || action === 'job-snapshot' || action === 'video') {
       const id = url.searchParams.get('id');

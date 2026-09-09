@@ -1,9 +1,11 @@
 import { useSyncExternalStore } from 'react';
-import { initialMissions, newMission, missionStorageKey, deletedProjectsKey, type MissionState } from './missions';
+import { initialMissions, identityWorkspace, identityWorkspaceId, newMission, missionStorageKey, deletedProjectsKey, type MissionState } from './missions';
 import { clipTitle, type CampaignMaster, type Manifest } from './data';
 import { stillApi, motionApi, type LiveJob, type LiveStatus, type MotionStatus } from './provider';
 
 let missions = initialMissions();
+missions.missions = [...missions.missions.filter(m => m.id !== identityWorkspaceId), identityWorkspace()];
+if (missions.selectedId === identityWorkspaceId) missions.selectedId = missions.missions[0].id;
 const explorationKey = 'content-studio-sandbox-v1';
 function savedExplorations(): CampaignMaster[] {
   try {
@@ -47,15 +49,16 @@ export function setStudioMissions(value: MissionState | ((previous: MissionState
   emit();
 }
 export function deleteStudioProject(id: string) {
-  const remaining = missions.missions.filter(m => m.id !== id);
-  if (remaining.length === missions.missions.length) return;
+  if (id === identityWorkspaceId) return;
+  const remaining = missions.missions.filter(m => m.id !== id && m.id !== identityWorkspaceId);
+  if (!missions.missions.some(m => m.id === id)) return;
   if (!remaining.length) remaining.push({ ...newMission(), title: 'Untitled project' });
   const next = { ...missions, missions: remaining, selectedId: missions.selectedId === id ? remaining[0].id : missions.selectedId };
   const deleted = new Set<string>(JSON.parse(localStorage.getItem(deletedProjectsKey) || '[]'));
   deleted.add(id);
   localStorage.setItem(deletedProjectsKey, JSON.stringify([...deleted]));
   localStorage.setItem(missionStorageKey, JSON.stringify(next));
-  setStudioMissions(next);
+  setStudioMissions({ ...next, missions: [...remaining, missions.missions.find(m => m.id === identityWorkspaceId)!] });
 }
 export function setStudioAssets(value: CampaignMaster[] | ((previous: CampaignMaster[]) => CampaignMaster[])) {
   const next = typeof value === 'function' ? value(assets) : value;
@@ -105,7 +108,7 @@ export function useStudioAssets() { return [useSyncExternalStore(subscribe, () =
 export type AssistantAction = { id: string; name: string; arguments: Record<string, unknown> };
 export type Receipt = { text: string; asset?: CampaignMaster; jobId?: string };
 export function studioContext(manifest: Manifest, route: string) {
-  const current = missions.missions.find(m => m.id === missions.selectedId)!;
+  const current = missions.missions.find(m => m.id === (route === 'deliver' ? missions.selectedId : identityWorkspaceId))!;
   return { route, identity: { id: 'iron_man_mark_iii', title: 'Iron Man / Mark III', version: manifest.version,
     adaptation: manifest.derived?.adaptation, stillTrainingRuns: manifest.derived?.stillTrainingRuns, constraints: ['Red and gold Mark III armor', 'Circular arc reactor', 'No unapproved redesign'],
     assets: { stills: manifest.stills?.length || 0, clips: manifest.clips.length, canonical: manifest.canon.length },
@@ -121,9 +124,9 @@ export function studioContext(manifest: Manifest, route: string) {
     } : null,
     sampleResults: (manifest.derived?.sampleResults || []).map(({ src, poster, prompt, ...metadata }) => metadata),
   },
-    currentMission: { ...current, briefs: undefined }, missions: missions.missions.map(m => ({ id: m.id, title: m.title })),
+    currentMission: { ...current, briefs: undefined }, missions: (route === 'deliver' ? missions.missions.filter(m => m.id !== identityWorkspaceId) : [current]).map(m => ({ id: m.id, title: m.title })), workspaceScope: route === 'deliver' ? 'delivery project' : 'identity', generationWorkspaceId: identityWorkspaceId,
     selectedMasterIds: { still: current.draft.stillId, motion: current.draft.motionId },
-    availableAssets: projectAssets(manifest).filter(a => a.campaignId === current.id).map(a => ({ id: a.id, title: a.title, kind: a.kind, src: a.src, poster: a.poster, prepared: a.prepared === true, prompt: a.prompt, reviewNotes: a.reviewNotes, lineage: a.lineage })),
+    availableAssets: projectAssets(manifest).map(a => ({ id: a.id, title: a.title, kind: a.kind, src: a.src, poster: a.poster, prepared: a.prepared === true, prompt: a.prompt, reviewNotes: a.reviewNotes, lineage: a.lineage })),
   };
 }
 export async function capabilities() {
@@ -153,7 +156,7 @@ export async function executeAssistantAction(action: AssistantAction, manifest: 
     setStudioMissions({ ...missions, selectedId: next.id, missions: [...missions.missions, next] });
     return { text: `Created ${next.title}. Project ID: ${next.id}.` };
   }
-  const mission = missions.missions.find(m => m.id === a.missionId);
+  const mission = missions.missions.find(m => m.id === (action.name.startsWith('generate_') ? identityWorkspaceId : a.missionId));
   if (!mission) throw new Error('Project no longer exists. Ask for a refreshed proposal.');
   const patchMission = (next: typeof mission) => setStudioMissions(previous => ({ ...previous, missions: previous.missions.map(m => m.id === next.id ? next : m) }));
   if (action.name === 'update_brief') {
@@ -172,7 +175,7 @@ export async function executeAssistantAction(action: AssistantAction, manifest: 
   }
   const allAssets = projectAssets(manifest);
   if (action.name === 'select_master') {
-    const master = allAssets.find(m => m.id === a.masterId && m.campaignId === mission.id && m.kind === a.kind);
+    const master = allAssets.find(m => m.id === a.masterId && m.kind === a.kind);
     if (!master) throw new Error('This master is not available in the project.');
     patchMission({ ...mission, draft: { ...mission.draft, ...(master.kind === 'still' ? { stillId: master.id } : { motionId: master.id }) } });
     return { text: `Selected ${master.title} as ${master.kind} master for ${mission.title}.`, asset: master };
@@ -190,7 +193,7 @@ export async function executeAssistantAction(action: AssistantAction, manifest: 
   if (!status.authorized || status.activeJob) throw new Error('Generation is busy, unauthorized, or another job is active.');
   const direction = typeof a.direction === 'string' ? a.direction.trim() : '';
   if (!direction || direction.length > 1500) throw new Error('A creative direction of 1 to 1500 characters is required.');
-  const source = allAssets.find(m => m.id === a.sourceId && m.campaignId === mission.id);
+  const source = allAssets.find(m => m.id === a.sourceId);
   const curatedSource = status.curatedReferences?.find(r => r.id === a.sourceId);
   const mode = a.mode || 'image-to-video';
   const referenceIds = Array.isArray(a.referenceIds) ? a.referenceIds : [];
